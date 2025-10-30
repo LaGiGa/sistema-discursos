@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Congregação - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-house-add"></i> Nova Congregação
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome da Congregação *</label>
+                        <input type="text" class="form-control" id="nome" name="nome" 
+                               placeholder="Ex: Congregação Central" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="localidade" class="form-label">Localidade *</label>
+                        <input type="text" class="form-control" id="localidade" name="localidade" 
+                               placeholder="Ex: São Paulo, Centro" required>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('listar_congregacoes') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Salvar Congregação
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

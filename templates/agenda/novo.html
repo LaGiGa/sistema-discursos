@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Agendamento - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-calendar-plus"></i> Novo Agendamento
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="data_discurso" class="form-label">Data *</label>
+                                <input type="date" class="form-control" id="data_discurso" name="data_discurso" 
+                                       value="{{ today }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="horario" class="form-label">Horário *</label>
+                                <input type="time" class="form-control" id="horario" name="horario" 
+                                       value="19:30" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="discurso_id" class="form-label">Discurso *</label>
+                        <select class="form-select" id="discurso_id" name="discurso_id" required>
+                            <option value="">Selecione um discurso</option>
+                            {% for discurso in discursos %}
+                                <option value="{{ discurso.id }}">
+                                    #{{ discurso.numero }} - {{ discurso.titulo }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="orador_id" class="form-label">Orador *</label>
+                        <select class="form-select" id="orador_id" name="orador_id" required>
+                            <option value="">Selecione um orador</option>
+                            {% for orador in oradores %}
+                                <option value="{{ orador.id }}">
+                                    {{ orador.nome }} - {{ orador.congregacao.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="congregacao_id" class="form-label">Congregação *</label>
+                        <select class="form-select" id="congregacao_id" name="congregacao_id" required>
+                            <option value="">Selecione uma congregação</option>
+                            {% for congregacao in congregacoes %}
+                                <option value="{{ congregacao.id }}">
+                                    {{ congregacao.nome }} - {{ congregacao.localidade }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="anfitriao_id" class="form-label">Anfitrião (Opcional)</label>
+                        <select class="form-select" id="anfitriao_id" name="anfitriao_id">
+                            <option value="">Selecione um anfitrião</option>
+                            {% for anfitriao in anfitrioes %}
+                                <option value="{{ anfitriao.id }}">
+                                    {{ anfitriao.nome }} - {{ anfitriao.congregacao.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">
+                            Anfitrião é opcional. Use quando houver orador visitante.
+                        </small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('listar_agenda') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Agendar Discurso
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    // Definir data mínima como hoje
+    document.getElementById('data_discurso').min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}
+{% endblock %}

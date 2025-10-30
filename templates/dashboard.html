@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
+    <a href="{{ url_for('novo_agendamento') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Novo Agendamento
+    </a>
+</div>
+
+<!-- Cards de Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h4 class="card-title">{{ total_oradores }}</h4>
+                <p class="card-text">Oradores</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h4 class="card-title">{{ total_discursos }}</h4>
+                <p class="card-text">Discursos Agendados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body text-center">
+                <h4 class="card-title">{{ discursos_este_mes }}</h4>
+                <p class="card-text">Este Mês</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h4 class="card-title">{{ congregacoes_count }}</h4>
+                <p class="card-text">Congregações</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-secondary">
+            <div class="card-body text-center">
+                <h4 class="card-title">{{ total_discursos_cadastrados }}</h4>
+                <p class="card-text">Discursos Cadastrados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-dark">
+            <div class="card-body text-center">
+                <h4 class="card-title">{{ 194 - total_discursos_cadastrados }}</h4>
+                <p class="card-text">Discursos Faltantes</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Próximos Discursos -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock"></i> Próximos Discursos
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if proximos_discursos %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Horário</th>
+                                    <th>Discurso</th>
+                                    <th>Orador</th>
+                                    <th>Congregação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for discurso in proximos_discursos %}
+                                <tr>
+                                    <td>{{ discurso.data_discurso.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ discurso.horario }}</td>
+                                    <td>#{{ discurso.discurso.numero }} - {{ discurso.discurso.titulo }}</td>
+                                    <td>{{ discurso.orador.nome }}</td>
+                                    <td>{{ discurso.congregacao.nome }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                        <p class="text-muted mt-2">Nenhum discurso agendado.</p>
+                        <a href="{{ url_for('novo_agendamento') }}" class="btn btn-primary">
+                            Agendar Primeiro Discurso
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightning"></i> Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('novo_agendamento') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-circle"></i> Agendar Discurso
+                    </a>
+                    <a href="{{ url_for('novo_orador') }}" class="btn btn-outline-success">
+                        <i class="bi bi-person-plus"></i> Cadastrar Orador
+                    </a>
+                    <a href="{{ url_for('importar_discursos') }}" class="btn btn-outline-info">
+                        <i class="bi bi-upload"></i> Importar Discursos
+                    </a>
+                    <a href="{{ url_for('listar_agenda') }}" class="btn btn-outline-warning">
+                        <i class="bi bi-calendar-week"></i> Ver Agenda Completa
+                    </a>
+                </div>
+
+                <!-- Status dos Discursos -->
+                <div class="mt-4 pt-3 border-top">
+                    <h6>Status dos Discursos:</h6>
+                    <div class="small">
+                        <span class="badge bg-success">Liberados: {{ total_discursos_cadastrados - (discursos_bloqueados or 0) }}</span>
+                        <span class="badge bg-danger ms-1">Bloqueados: {{ discursos_bloqueados or 0 }}</span>
+                        <span class="badge bg-secondary ms-1">Total: {{ total_discursos_cadastrados }}/194</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

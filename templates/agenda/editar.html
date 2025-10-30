@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Agendamento - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-pencil"></i> Editar Agendamento
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-info-circle"></i> Informações do Agendamento</h6>
+                    <p class="mb-0">
+                        <strong>Discurso:</strong> #{{ agendamento.discurso.numero }} - {{ agendamento.discurso.titulo }}<br>
+                        <strong>Orador Original:</strong> {{ agendamento.orador.nome }}<br>
+                        <strong>Data Original:</strong> {{ agendamento.data_discurso.strftime('%d/%m/%Y') }} às {{ agendamento.horario }}
+                    </p>
+                </div>
+
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="data_discurso" class="form-label">Nova Data *</label>
+                                <input type="date" class="form-control" id="data_discurso" name="data_discurso" 
+                                       value="{{ agendamento.data_discurso }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="horario" class="form-label">Novo Horário *</label>
+                                <input type="time" class="form-control" id="horario" name="horario" 
+                                       value="{{ agendamento.horario }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="discurso_id" class="form-label">Discurso *</label>
+                        <select class="form-select" id="discurso_id" name="discurso_id" required>
+                            <option value="">Selecione um discurso</option>
+                            {% for discurso in discursos %}
+                                <option value="{{ discurso.id }}" 
+                                    {% if discurso.id == agendamento.discurso_id %}selected{% endif %}>
+                                    #{{ discurso.numero }} - {{ discurso.titulo }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="orador_id" class="form-label">Orador *</label>
+                        <select class="form-select" id="orador_id" name="orador_id" required>
+                            <option value="">Selecione um orador</option>
+                            {% for orador in oradores %}
+                                <option value="{{ orador.id }}"
+                                    {% if orador.id == agendamento.orador_id %}selected{% endif %}>
+                                    {{ orador.nome }} - {{ orador.congregacao.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            <i class="bi bi-exclamation-triangle"></i> 
+                            <strong>Substituição:</strong> Selecione um novo orador em caso de imprevisto
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="congregacao_id" class="form-label">Congregação *</label>
+                        <select class="form-select" id="congregacao_id" name="congregacao_id" required>
+                            <option value="">Selecione uma congregação</option>
+                            {% for congregacao in congregacoes %}
+                                <option value="{{ congregacao.id }}"
+                                    {% if congregacao.id == agendamento.congregacao_id %}selected{% endif %}>
+                                    {{ congregacao.nome }} - {{ congregacao.localidade }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="anfitriao_id" class="form-label">Anfitrião (Opcional)</label>
+                        <select class="form-select" id="anfitriao_id" name="anfitriao_id">
+                            <option value="">Selecione um anfitrião</option>
+                            {% for anfitriao in anfitrioes %}
+                                <option value="{{ anfitriao.id }}"
+                                    {% if agendamento.anfitriao_id and anfitriao.id == agendamento.anfitriao_id %}selected{% endif %}>
+                                    {{ anfitriao.nome }} - {{ anfitriao.congregacao.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="realizado" name="realizado"
+                                {% if agendamento.realizado %}checked{% endif %}>
+                            <label class="form-check-label" for="realizado">
+                                <strong>Discurso já realizado</strong>
+                            </label>
+                        </div>
+                        <div class="form-text">
+                            Marque esta opção se o discurso já foi realizado
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('listar_agenda') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        
+                        <!-- Botão para excluir -->
+                        <button type="button" class="btn btn-danger me-md-2" data-bs-toggle="modal" data-bs-target="#modalExcluir">
+                            <i class="bi bi-trash"></i> Excluir
+                        </button>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Atualizar Agendamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este agendamento?</p>
+                <div class="alert alert-warning">
+                    <strong>Discurso:</strong> #{{ agendamento.discurso.numero }} - {{ agendamento.discurso.titulo }}<br>
+                    <strong>Orador:</strong> {{ agendamento.orador.nome }}<br>
+                    <strong>Data:</strong> {{ agendamento.data_discurso.strftime('%d/%m/%Y') }} às {{ agendamento.horario }}
+                </div>
+                <p class="text-danger"><strong>Esta ação não pode ser desfeita!</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('excluir_agendamento', id=agendamento.id) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Sim, Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    document.getElementById('data_discurso').min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}
+{% endblock %}

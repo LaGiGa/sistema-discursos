@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Usuários - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-people-fill"></i> Usuários Administradores</h2>
+    <a href="{{ url_for('novo_usuario') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> Novo Usuário
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if usuarios %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Usuário</th>
+                            <th>Congregação</th>
+                            <th>Status</th>
+                            <th width="150">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td>
+                                <strong>{{ usuario.nome }}</strong>
+                                {% if usuario.id == current_user.id %}
+                                    <span class="badge bg-info ms-1">Você</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ usuario.username }}</td>
+                            <td>
+                                {% if usuario.congregacao %}
+                                    {{ usuario.congregacao.nome }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-success">Ativo</span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('editar_usuario', id=usuario.id) }}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                    
+                                    {% if usuario.id != current_user.id %}
+                                    <button type="button" class="btn btn-outline-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#modalExcluir{{ usuario.id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Modal de Exclusão -->
+                                <div class="modal fade" id="modalExcluir{{ usuario.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Confirmar Exclusão</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Tem certeza que deseja excluir o usuário <strong>{{ usuario.nome }}</strong>?</p>
+                                                <p class="text-danger"><strong>Esta ação não pode ser desfeita!</strong></p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <form action="{{ url_for('excluir_usuario', id=usuario.id) }}" method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-danger">Sim, Excluir</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-person-x fs-1 text-muted"></i>
+                <h5 class="text-muted mt-3">Nenhum usuário cadastrado</h5>
+                <p class="text-muted">Cadastre o primeiro usuário administrador</p>
+                <a href="{{ url_for('novo_usuario') }}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Cadastrar Primeiro Usuário
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="alert alert-info mt-4">
+    <h6><i class="bi bi-shield-check"></i> Permissões dos Usuários Administradores</h6>
+    <ul class="mb-0">
+        <li>Todos os usuários têm acesso completo ao sistema</li>
+        <li>Podem cadastrar, editar e excluir qualquer informação</li>
+        <li>Podem criar novos usuários administradores</li>
+        <li>Use com cuidado as permissões administrativas</li>
+    </ul>
+</div>
+{% endblock %}

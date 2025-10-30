@@ -1,0 +1,3 @@
+Primeiro passo: ter o Python instalado, foi instalado na versão 3.12. 
+Segundo: iniciar o arquivo app.py
+Terceiro: abrir a url local em:http://localhost:5000

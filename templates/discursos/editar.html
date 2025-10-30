@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Discurso - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-pencil"></i> Editar Discurso #{{ discurso.numero }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="numero" class="form-label">Número do Discurso *</label>
+                                <input type="number" class="form-control" id="numero" name="numero" 
+                                       value="{{ discurso.numero }}" min="1" max="200" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="duracao" class="form-label">Duração (minutos) *</label>
+                                <input type="number" class="form-control" id="duracao" name="duracao" 
+                                       value="{{ discurso.duracao }}" min="5" max="60" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="titulo" class="form-label">Título do Discurso *</label>
+                        <input type="text" class="form-control" id="titulo" name="titulo" 
+                               value="{{ discurso.titulo }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tema" class="form-label">Tema Principal</label>
+                        <input type="text" class="form-control" id="tema" name="tema" 
+                               value="{{ discurso.tema }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição/Esboço</label>
+                        <textarea class="form-control" id="descricao" name="descricao" 
+                                  rows="4">{{ discurso.descricao or '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="bloqueado" name="bloqueado"
+                                {% if discurso.bloqueado %}checked{% endif %}>
+                            <label class="form-check-label" for="bloqueado">
+                                <strong>Discurso bloqueado</strong> - Não disponível para agendamento
+                            </label>
+                        </div>
+                        <div class="form-text">
+                            Status atual: 
+                            {% if discurso.bloqueado %}
+                                <span class="badge bg-danger">Bloqueado</span>
+                            {% else %}
+                                <span class="badge bg-success">Liberado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('listar_discursos') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Atualizar Discurso
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

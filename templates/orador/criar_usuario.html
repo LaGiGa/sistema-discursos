@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Criar Usuário para Orador - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-person-plus"></i> Criar Acesso para Orador
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Criando acesso para: <strong>{{ orador.nome }}</strong>
+                </div>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nome de Usuário *</label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="Ex: {{ orador.nome.split()[0].lower() }}" required>
+                        <small class="form-text text-muted">
+                            O orador usará este nome para fazer login
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Senha *</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Digite uma senha segura" required>
+                        <small class="form-text text-muted">
+                            Mínimo de 6 caracteres
+                        </small>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('listar_oradores') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Criar Acesso
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
