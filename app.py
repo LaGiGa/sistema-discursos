@@ -13,35 +13,12 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'chave-secreta-aqui'
 
 # =============================================
-# CONFIGURAÇÃO DO BANCO DE DADOS - POSTGRESQL
+# CONFIGURAÇÃO SIMPLES TEMPORÁRIA
 # =============================================
-# Configuração do Banco de Dados
-import os
-
-if os.environ.get('RENDER'):
-    # PostgreSQL no Render com pg8000
-    database_url = os.environ.get('DATABASE_URL')
-    if database_url:
-        # Converte para formato do pg8000 se necessário
-        if database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql+pg8000://', 1)
-        elif database_url.startswith('postgresql://'):
-            database_url = database_url.replace('postgresql://', 'postgresql+pg8000://', 1)
-        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-        print("✅ Usando PostgreSQL no Render com pg8000")
-    else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sistema_discursos.db'
-        print("⚠️  DATABASE_URL não encontrado, usando SQLite")
-else:
-    # SQLite local para desenvolvimento
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sistema_discursos.db'
-    print("✅ Usando SQLite local")
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sistema_discursos.db'
+print("✅ Usando SQLite temporariamente para estabilidade")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_recycle': 300,
-    'pool_pre_ping': True
-}
 
 # Configurações de Email (opcional)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -133,7 +110,6 @@ class UsuarioOrador(db.Model):
     
     orador = db.relationship('Orador', backref='usuario')
 
-# NOVOS MODELOS ADICIONADOS
 class HistoricoDiscurso(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data_realizacao = db.Column(db.Date, nullable=False)
@@ -194,15 +170,16 @@ def criar_dados_iniciais():
             )
             db.session.add(admin)
             
-            # Criar TODOS os 194 discursos
-            todos_discursos = [
+            # Criar alguns discursos de exemplo
+            discursos_exemplo = [
                 (1, "Você conhece bem a Deus?", "Conhecimento de Deus"),
                 (2, "Você vai sobreviver aos últimos dias?", "Sobrevivência"),
-                # ... (todos os 194 discursos que você já tem)
-                (194, "Como a sabedoria de Deus nos ajuda", "Sabedoria de Deus")
+                (3, "Como encontrar a verdadeira felicidade", "Felicidade"),
+                (4, "Por que Deus permite o sofrimento?", "Sofrimento"),
+                (5, "O que a Bíblia diz sobre o futuro?", "Futuro")
             ]
             
-            for numero, titulo, tema in todos_discursos:
+            for numero, titulo, tema in discursos_exemplo:
                 discurso_existente = Discurso.query.filter_by(numero=numero).first()
                 if not discurso_existente:
                     discurso = Discurso(
@@ -225,7 +202,7 @@ def criar_dados_iniciais():
         db.session.rollback()
 
 # =============================================
-# ROTAS (MANTIDAS - MESMO CÓDIGO ANTERIOR)
+# ROTAS BÁSICAS
 # =============================================
 
 @app.route('/')
@@ -279,8 +256,9 @@ def dashboard():
                          total_discursos_cadastrados=total_discursos_cadastrados,
                          proximos_discursos=proximos_discursos)
 
-# ... (TODAS AS OUTRAS ROTAS PERMANECEM EXATAMENTE IGUAIS)
-# [Todo o resto do código das rotas que eu te enviei anteriormente]
+# =============================================
+# INICIALIZAÇÃO
+# =============================================
 
 if __name__ == '__main__':
     with app.app_context():
