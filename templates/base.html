@@ -72,18 +72,28 @@
                        class="list-group-item list-group-item-action {% if request.endpoint in ['listar_discursos', 'novo_discurso', 'editar_discurso', 'importar_discursos'] %}active{% endif %}">
                         <i class="bi bi-journal-text"></i> Discursos
                     </a>
+                    <!-- NOVO MENU: Histórico -->
+                    <a href="{{ url_for('listar_historico') }}" 
+                       class="list-group-item list-group-item-action {% if request.endpoint in ['listar_historico', 'novo_historico'] %}active{% endif %}">
+                        <i class="bi bi-clock-history"></i> Histórico
+                    </a>
                     <a href="{{ url_for('listar_congregacoes') }}" 
-                       class="list-group-item list-group-item-action {% if request.endpoint in ['listar_congregacoes', 'nova_congregacao'] %}active{% endif %}">
+                       class="list-group-item list-group-item-action {% if request.endpoint in ['listar_congregacoes', 'nova_congregacao', 'coordenador_congregacao'] %}active{% endif %}">
                         <i class="bi bi-house-door"></i> Congregações
+                    </a>
+                    <!-- NOVO MENU: Discursos Aceitos -->
+                    <a href="{{ url_for('admin_discursos_aceitos') }}" 
+                       class="list-group-item list-group-item-action {% if request.endpoint == 'admin_discursos_aceitos' %}active{% endif %}">
+                        <i class="bi bi-check-circle"></i> Discursos Aceitos
                     </a>
                     <a href="{{ url_for('listar_usuarios') }}" 
                        class="list-group-item list-group-item-action {% if request.endpoint in ['listar_usuarios', 'novo_usuario', 'editar_usuario'] %}active{% endif %}">
                         <i class="bi bi-shield-check"></i> Usuários
                     </a>
-		    <a href="{{ url_for('relatorios_pdf') }}" 
-   		    class="list-group-item list-group-item-action {% if request.endpoint in ['relatorios_pdf', 'gerar_pdf'] %}active{% endif %}">
-    		   <i class="bi bi-file-pdf"></i> Relatórios PDF
-			</a>
+                    <a href="{{ url_for('relatorios_pdf') }}" 
+                       class="list-group-item list-group-item-action {% if request.endpoint in ['relatorios_pdf', 'gerar_pdf'] %}active{% endif %}">
+                        <i class="bi bi-file-pdf"></i> Relatórios PDF
+                    </a>
                 </div>
             </div>
 

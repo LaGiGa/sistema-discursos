@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Discurso no Histórico - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-clock-history"></i> Registrar Discurso no Histórico
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-3">
+                        <!-- Data do Discurso -->
+                        <div class="col-md-6">
+                            <label for="data_realizacao" class="form-label">Data do Discurso *</label>
+                            <input type="date" class="form-control" id="data_realizacao" name="data_realizacao" 
+                                   value="{{ request.form.data_realizacao or '' }}" required>
+                        </div>
+
+                        <!-- Congregação -->
+                        <div class="col-md-6">
+                            <label for="congregacao_id" class="form-label">Congregação *</label>
+                            <select class="form-select" id="congregacao_id" name="congregacao_id" required>
+                                <option value="">Selecione uma congregação</option>
+                                {% for congregacao in congregacoes %}
+                                    <option value="{{ congregacao.id }}" 
+                                            {% if request.form.congregacao_id|int == congregacao.id %}selected{% endif %}>
+                                        {{ congregacao.nome }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Orador -->
+                        <div class="col-md-6">
+                            <label for="orador_id" class="form-label">Orador *</label>
+                            <select class="form-select" id="orador_id" name="orador_id" required>
+                                <option value="">Selecione um orador</option>
+                                {% for orador in oradores %}
+                                    <option value="{{ orador.id }}" 
+                                            {% if request.form.orador_id|int == orador.id %}selected{% endif %}>
+                                        {{ orador.nome }} - {{ orador.congregacao.nome }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Discurso -->
+                        <div class="col-md-6">
+                            <label for="discurso_id" class="form-label">Discurso *</label>
+                            <select class="form-select" id="discurso_id" name="discurso_id" required>
+                                <option value="">Selecione um discurso</option>
+                                {% for discurso in discursos %}
+                                    <option value="{{ discurso.id }}" 
+                                            {% if request.form.discurso_id|int == discurso.id %}selected{% endif %}>
+                                        #{{ discurso.numero }} - {{ discurso.titulo }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="col-12">
+                            <label for="observacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoes" name="observacoes" 
+                                      rows="3" placeholder="Observações sobre o discurso...">{{ request.form.observacoes or '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Registrar no Histórico
+                                </button>
+                                <a href="{{ url_for('listar_historico') }}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Voltar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -5,9 +5,14 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
-    <a href="{{ url_for('novo_agendamento') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Novo Agendamento
-    </a>
+    <div>
+        <a href="{{ url_for('novo_agendamento') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Novo Agendamento
+        </a>
+        <a href="{{ url_for('listar_historico') }}" class="btn btn-info">
+            <i class="bi bi-clock-history"></i> Ver Histórico
+        </a>
+    </div>
 </div>
 
 <!-- Cards de Estatísticas -->
@@ -82,6 +87,7 @@
                                     <th>Discurso</th>
                                     <th>Orador</th>
                                     <th>Congregação</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -92,6 +98,13 @@
                                     <td>#{{ discurso.discurso.numero }} - {{ discurso.discurso.titulo }}</td>
                                     <td>{{ discurso.orador.nome }}</td>
                                     <td>{{ discurso.congregacao.nome }}</td>
+                                    <td>
+                                        <form action="{{ url_for('realizar_discurso', id=discurso.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-success btn-sm" title="Marcar como realizado">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -126,21 +139,21 @@
                     <a href="{{ url_for('novo_orador') }}" class="btn btn-outline-success">
                         <i class="bi bi-person-plus"></i> Cadastrar Orador
                     </a>
-                    <a href="{{ url_for('importar_discursos') }}" class="btn btn-outline-info">
-                        <i class="bi bi-upload"></i> Importar Discursos
+                    <a href="{{ url_for('listar_historico') }}" class="btn btn-outline-info">
+                        <i class="bi bi-clock-history"></i> Ver Histórico
                     </a>
-                    <a href="{{ url_for('listar_agenda') }}" class="btn btn-outline-warning">
-                        <i class="bi bi-calendar-week"></i> Ver Agenda Completa
+                    <a href="{{ url_for('admin_discursos_aceitos') }}" class="btn btn-outline-warning">
+                        <i class="bi bi-check-circle"></i> Discursos Aceitos
                     </a>
                 </div>
 
-                <!-- Status dos Discursos -->
+                <!-- Links para Oradores -->
                 <div class="mt-4 pt-3 border-top">
-                    <h6>Status dos Discursos:</h6>
-                    <div class="small">
-                        <span class="badge bg-success">Liberados: {{ total_discursos_cadastrados - (discursos_bloqueados or 0) }}</span>
-                        <span class="badge bg-danger ms-1">Bloqueados: {{ discursos_bloqueados or 0 }}</span>
-                        <span class="badge bg-secondary ms-1">Total: {{ total_discursos_cadastrados }}/194</span>
+                    <h6>Acesso Oradores:</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('orador_login') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-person"></i> Login Orador
+                        </a>
                     </div>
                 </div>
             </div>
