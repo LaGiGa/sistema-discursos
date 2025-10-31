@@ -22,20 +22,31 @@
                     </ul>
                 </div>
 
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
                 <form method="POST" action="{{ url_for('gerar_pdf') }}">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="data_inicio" class="form-label">Data Início *</label>
                                 <input type="date" class="form-control" id="data_inicio" name="data_inicio" 
-                                       value="{{ date.today().replace(day=1) }}" required>
+                                       value="{{ date.today().replace(day=1) if date else '' }}" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="data_fim" class="form-label">Data Fim *</label>
                                 <input type="date" class="form-control" id="data_fim" name="data_fim" 
-                                       value="{{ date.today() }}" required>
+                                       value="{{ date.today() if date else '' }}" required>
                             </div>
                         </div>
                     </div>
@@ -108,15 +119,40 @@
 
 {% block scripts %}
 <script>
-    // Definir data mínima e máxima
-    document.getElementById('data_inicio').max = new Date().toISOString().split('T')[0];
-    document.getElementById('data_fim').max = new Date().toISOString().split('T')[0];
+    // Definir data máxima como hoje
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('data_inicio').max = today;
+    document.getElementById('data_fim').max = today;
     
     // Validar que data início não seja maior que data fim
     document.getElementById('data_inicio').addEventListener('change', function() {
         const dataFim = document.getElementById('data_fim');
         if (this.value > dataFim.value) {
             dataFim.value = this.value;
+        }
+    });
+
+    document.getElementById('data_fim').addEventListener('change', function() {
+        const dataInicio = document.getElementById('data_inicio');
+        if (this.value < dataInicio.value) {
+            dataInicio.value = this.value;
+        }
+    });
+
+    // Preencher datas padrão se estiverem vazias
+    document.addEventListener('DOMContentLoaded', function() {
+        const dataInicio = document.getElementById('data_inicio');
+        const dataFim = document.getElementById('data_fim');
+        
+        if (!dataInicio.value) {
+            // Primeiro dia do mês atual
+            const firstDay = new Date();
+            firstDay.setDate(1);
+            dataInicio.value = firstDay.toISOString().split('T')[0];
+        }
+        
+        if (!dataFim.value) {
+            dataFim.value = today;
         }
     });
 </script>
