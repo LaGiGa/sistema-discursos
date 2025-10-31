@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios PDF - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-file-pdf"></i> Gerar Relatório em PDF
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5><i class="bi bi-info-circle"></i> Como funciona:</h5>
+                    <ul class="mb-0">
+                        <li>Selecione o período desejado</li>
+                        <li>Escolha o tipo de relatório</li>
+                        <li>Clique em "Gerar PDF"</li>
+                        <li>O relatório será baixado automaticamente</li>
+                    </ul>
+                </div>
+
+                <form method="POST" action="{{ url_for('gerar_pdf') }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="data_inicio" class="form-label">Data Início *</label>
+                                <input type="date" class="form-control" id="data_inicio" name="data_inicio" 
+                                       value="{{ date.today().replace(day=1) }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="data_fim" class="form-label">Data Fim *</label>
+                                <input type="date" class="form-control" id="data_fim" name="data_fim" 
+                                       value="{{ date.today() }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tipo_relatorio" class="form-label">Tipo de Relatório *</label>
+                        <select class="form-select" id="tipo_relatorio" name="tipo_relatorio" required>
+                            <option value="todos">Todos os Discursos (Agendados e Realizados)</option>
+                            <option value="discursos_realizados">Apenas Discursos Realizados</option>
+                        </select>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-file-pdf"></i> Gerar PDF
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-4">
+                    <h5>Pré-visualização do Relatório:</h5>
+                    <div class="border rounded p-3 bg-light">
+                        <div class="text-center mb-3">
+                            <strong>RELATÓRIO DE DISCURSOS REALIZADOS</strong><br>
+                            <small>Período: [Data Início] a [Data Fim]</small>
+                        </div>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Horário</th>
+                                    <th>Discurso</th>
+                                    <th>Orador</th>
+                                    <th>Congregação</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>01/01/2024</td>
+                                    <td>19:30</td>
+                                    <td>#1 - Você conhece bem a Deus?</td>
+                                    <td>João Silva</td>
+                                    <td>Congregação Central</td>
+                                    <td>Realizado</td>
+                                </tr>
+                                <tr>
+                                    <td>08/01/2024</td>
+                                    <td>19:30</td>
+                                    <td>#2 - Você vai sobreviver aos últimos dias?</td>
+                                    <td>Maria Santos</td>
+                                    <td>Congregação Central</td>
+                                    <td>Agendado</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="text-center">
+                            <small>Total de registros: 2</small><br>
+                            <small>Relatório gerado em: [Data e Hora]</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    // Definir data mínima e máxima
+    document.getElementById('data_inicio').max = new Date().toISOString().split('T')[0];
+    document.getElementById('data_fim').max = new Date().toISOString().split('T')[0];
+    
+    // Validar que data início não seja maior que data fim
+    document.getElementById('data_inicio').addEventListener('change', function() {
+        const dataFim = document.getElementById('data_fim');
+        if (this.value > dataFim.value) {
+            dataFim.value = this.value;
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

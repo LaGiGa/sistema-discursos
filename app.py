@@ -1,3 +1,12 @@
+from flask import Response
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+import io
+from datetime import datetime
+
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -897,7 +906,112 @@ def excluir_usuario(id):
     db.session.commit()
     flash(f'Usuário {usuario.nome} excluído com sucesso!', 'success')
     return redirect(url_for('listar_usuarios'))
+# =============================================
+# RELATÓRIOS PDF
+# =============================================
 
+@app.route('/relatorios/pdf')
+@login_required
+def relatorios_pdf():
+    return render_template('relatorios/pdf.html')
+
+@app.route('/relatorios/gerar-pdf', methods=['POST'])
+@login_required
+def gerar_pdf():
+    try:
+        data_inicio = datetime.strptime(request.form['data_inicio'], '%Y-%m-%d').date()
+        data_fim = datetime.strptime(request.form['data_fim'], '%Y-%m-%d').date()
+        tipo_relatorio = request.form['tipo_relatorio']
+        
+        # Buscar dados conforme o período
+        if tipo_relatorio == 'discursos_realizados':
+            agenda = AgendaDiscurso.query.filter(
+                AgendaDiscurso.data_discurso.between(data_inicio, data_fim),
+                AgendaDiscurso.realizado == True
+            ).order_by(AgendaDiscurso.data_discurso).all()
+            titulo = "Relatório de Discursos Realizados"
+        else:
+            agenda = AgendaDiscurso.query.filter(
+                AgendaDiscurso.data_discurso.between(data_inicio, data_fim)
+            ).order_by(AgendaDiscurso.data_discurso).all()
+            titulo = "Relatório Completo de Agenda"
+        
+        # Criar PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+        
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Título
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=30,
+            alignment=1,  # Centro
+            textColor=colors.HexColor('#2c3e50')
+        )
+        
+        elements.append(Paragraph(titulo, title_style))
+        elements.append(Paragraph(f"Período: {data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}", styles['Normal']))
+        elements.append(Spacer(1, 20))
+        
+        if agenda:
+            # Cabeçalho da tabela
+            data = [['Data', 'Horário', 'Discurso', 'Orador', 'Congregação', 'Status']]
+            
+            for item in agenda:
+                status = "Realizado" if item.realizado else "Agendado"
+                data.append([
+                    item.data_discurso.strftime('%d/%m/%Y'),
+                    item.horario,
+                    f"#{item.discurso.numero} - {item.discurso.titulo}",
+                    item.orador.nome,
+                    item.congregacao.nome,
+                    status
+                ])
+            
+            # Criar tabela
+            table = Table(data, colWidths=[1*inch, 0.8*inch, 2.5*inch, 1.5*inch, 1.2*inch, 0.8*inch])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#34495e')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            
+            elements.append(table)
+            elements.append(Spacer(1, 20))
+            elements.append(Paragraph(f"Total de registros: {len(agenda)}", styles['Normal']))
+        else:
+            elements.append(Paragraph("Nenhum dado encontrado para o período selecionado.", styles['Normal']))
+        
+        # Rodapé
+        elements.append(Spacer(1, 30))
+        elements.append(Paragraph(f"Relatório gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M')}", styles['Normal']))
+        elements.append(Paragraph("Sistema de Discursos Públicos", styles['Normal']))
+        
+        doc.build(elements)
+        buffer.seek(0)
+        
+        filename = f"relatorio_discursos_{data_inicio}_{data_fim}.pdf"
+        
+        return Response(
+            buffer.getvalue(),
+            mimetype="application/pdf",
+            headers={"Content-Disposition": f"attachment;filename={filename}"}
+        )
+        
+    except Exception as e:
+        flash(f'Erro ao gerar PDF: {str(e)}', 'error')
+        return redirect(url_for('relatorios_pdf'))
 # NO FINAL DO app.py, SUBSTITUA por:
 if __name__ == '__main__':
     with app.app_context():

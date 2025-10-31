@@ -80,6 +80,10 @@
                        class="list-group-item list-group-item-action {% if request.endpoint in ['listar_usuarios', 'novo_usuario', 'editar_usuario'] %}active{% endif %}">
                         <i class="bi bi-shield-check"></i> Usuários
                     </a>
+		    <a href="{{ url_for('relatorios_pdf') }}" 
+   		    class="list-group-item list-group-item-action {% if request.endpoint in ['relatorios_pdf', 'gerar_pdf'] %}active{% endif %}">
+    		   <i class="bi bi-file-pdf"></i> Relatórios PDF
+			</a>
                 </div>
             </div>
 
