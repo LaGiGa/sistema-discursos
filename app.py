@@ -15,16 +15,23 @@ app.config['SECRET_KEY'] = 'chave-secreta-aqui'
 # =============================================
 # CONFIGURAÇÃO DO BANCO DE DADOS - POSTGRESQL
 # =============================================
+# Configuração do Banco de Dados
 import os
-import re
 
 if os.environ.get('RENDER'):
-    # PostgreSQL no Render
+    # PostgreSQL no Render com pg8000
     database_url = os.environ.get('DATABASE_URL')
-    if database_url and database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-    print("✅ Usando PostgreSQL no Render")
+    if database_url:
+        # Converte para formato do pg8000 se necessário
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql+pg8000://', 1)
+        elif database_url.startswith('postgresql://'):
+            database_url = database_url.replace('postgresql://', 'postgresql+pg8000://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+        print("✅ Usando PostgreSQL no Render com pg8000")
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sistema_discursos.db'
+        print("⚠️  DATABASE_URL não encontrado, usando SQLite")
 else:
     # SQLite local para desenvolvimento
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sistema_discursos.db'
