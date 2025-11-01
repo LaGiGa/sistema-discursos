@@ -1105,6 +1105,42 @@ def criar_usuario_orador(orador_id):
 # =============================================
 
 # ROTAS PARA HISTÓRICO DE DISCURSOS
+@app.route('/historico/novo', methods=['GET', 'POST'])
+@login_required
+def novo_historico():
+    if request.method == 'POST':
+        try:
+            data_realizacao = datetime.strptime(request.form['data_realizacao'], '%Y-%m-%d').date()
+            discurso_id = request.form['discurso_id']
+            orador_id = request.form['orador_id']
+            congregacao_id = request.form['congregacao_id']
+            observacoes = request.form.get('observacoes', '')
+            
+            historico = HistoricoDiscurso(
+                data_realizacao=data_realizacao,
+                discurso_id=discurso_id,
+                orador_id=orador_id,
+                congregacao_id=congregacao_id,
+                observacoes=observacoes
+            )
+            
+            db.session.add(historico)
+            db.session.commit()
+            flash('Discurso histórico registrado com sucesso!', 'success')
+            return redirect(url_for('listar_historico'))
+            
+        except Exception as e:
+            flash(f'Erro ao registrar histórico: {str(e)}', 'error')
+    
+    # Para GET - mostrar formulário
+    discursos = Discurso.query.filter_by(ativo=True).all()
+    oradores = Orador.query.filter_by(ativo=True).all()
+    congregacoes = Congregacao.query.filter_by(ativo=True).all()
+    
+    return render_template('historico/novo.html',
+                         discursos=discursos,
+                         oradores=oradores,
+                         congregacoes=congregacoes)
 @app.route('/historico')
 @login_required
 def listar_historico():
