@@ -126,14 +126,14 @@
                                     <td class="table-actions">
                                         {% if not discurso.realizado %}
                                             {% if discurso.confirmado_pelo_orador %}
-                                                <form action="{{ url_for('cancelar_confirmacao_discurso', orador_id=orador.id, agenda_id=discurso.id) }}" method="POST" class="d-inline">
+                                                <form action={{ url_for('cancelar_confirmacao_discurso_orador', orador_id=orador.id, agenda_id=discurso.id) }} method="POST" class="d-inline">
                                                     <button type="submit" class="btn btn-outline-warning btn-sm" 
                                                             onclick="return confirm('Cancelar confirmação deste discurso?')">
                                                         <i class="bi bi-x-circle"></i> Cancelar
                                                     </button>
                                                 </form>
                                             {% else %}
-                                                <form action="{{ url_for('confirmar_discurso_agendado', orador_id=orador.id, agenda_id=discurso.id) }}" method="POST" class="d-inline">
+                                                <form action={{ url_for('confirmar_discurso_agendado_orador', orador_id=orador.id, agenda_id=discurso.id) }} method="POST" class="d-inline">
                                                     <button type="submit" class="btn btn-success btn-sm">
                                                         <i class="bi bi-check-lg"></i> Confirmar
                                                     </button>

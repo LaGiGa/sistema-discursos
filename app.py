@@ -1348,8 +1348,8 @@ def admin_discursos_aceitos():
 # ROTAS PARA CONFIRMAÇÃO DE DISCURSOS
 # =============================================
 
-@app.route('/orador/<int:orador_id>/confirmar-discurso/<int:agenda_id>', methods=['POST'])
-def confirmar_discurso_agendado(orador_id, agenda_id):
+@app.route('/orador/<int:orador_id>/confirmar-discurso-agendado/<int:agenda_id>', methods=['POST'])
+def confirmar_discurso_agendado_orador(orador_id, agenda_id):
     agenda = AgendaDiscurso.query.get_or_404(agenda_id)
     
     # Verificar se o discurso pertence ao orador
@@ -1364,8 +1364,8 @@ def confirmar_discurso_agendado(orador_id, agenda_id):
     flash(f'Discurso #{agenda.discurso.numero} confirmado para {agenda.data_discurso.strftime("%d/%m/%Y")}!', 'success')
     return redirect(url_for('orador_discursos', orador_id=orador_id))
 
-@app.route('/orador/<int:orador_id>/cancelar-confirmacao/<int:agenda_id>', methods=['POST'])
-def cancelar_confirmacao_discurso(orador_id, agenda_id):
+@app.route('/orador/<int:orador_id>/cancelar-confirmacao-agendado/<int:agenda_id>', methods=['POST'])
+def cancelar_confirmacao_discurso_orador(orador_id, agenda_id):
     agenda = AgendaDiscurso.query.get_or_404(agenda_id)
     
     # Verificar se o discurso pertence ao orador
