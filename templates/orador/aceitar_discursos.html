@@ -55,7 +55,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-journal-check"></i> Aceitar Discursos</h2>
             <div>
-                <a href="{{ url_for('orador_discursos_preparados', orador_id=orador.id) }}" class="btn btn-success">
+                <a href="{{ url_for('discursos_preparados_orador', orador_id=orador.id) }}" class="btn btn-success">
                     <i class="bi bi-list-check"></i> Meus Discursos Preparados
                 </a>
                 <a href="{{ url_for('orador_discursos', orador_id=orador.id) }}" class="btn btn-outline-primary">
@@ -108,13 +108,13 @@
                                 <i class="bi bi-check-circle-fill"></i>
                                 <small>Discurso aceito em {{ discursos_aceitos[discurso.id].data_aceitacao.strftime('%d/%m/%Y') }}</small>
                             </div>
-                            <form action="{{ url_for('remover_discurso', orador_id=orador.id, discurso_id=discurso.id) }}" method="POST" class="d-grid">
+                            <form action="{{ url_for('remover_discurso_orador', orador_id=orador.id, discurso_id=discurso.id) }}" method="POST" class="d-grid">
                                 <button type="submit" class="btn btn-outline-danger btn-sm">
                                     <i class="bi bi-x-circle"></i> Remover
                                 </button>
                             </form>
                         {% else %}
-                            <form action="{{ url_for('aceitar_discurso', orador_id=orador.id, discurso_id=discurso.id) }}" method="POST" class="d-grid">
+                            <form action="{{ url_for('aceitar_discurso_orador', orador_id=orador.id, discurso_id=discurso.id) }}" method="POST" class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-sm">
                                     <i class="bi bi-check-lg"></i> Aceitar Discurso
                                 </button>
