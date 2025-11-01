@@ -51,17 +51,15 @@ class User(UserMixin, db.Model):
     nome = db.Column(db.String(100), nullable=False)
     congregacao_id = db.Column(db.Integer, db.ForeignKey('congregacao.id'))
     ativo = db.Column(db.Boolean, default=True)
+    
+    # Relacionamento simples
+    congregacao = db.relationship('Congregacao', backref=db.backref('usuarios', lazy=True))
 
 class Congregacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     localidade = db.Column(db.String(100), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
-    
-    # RELACIONAMENTOS CORRIGIDOS - remover backref duplicados
-    usuarios = db.relationship('User', backref='congregacao_ref', lazy=True)
-    oradores = db.relationship('Orador', backref='congregacao_ref', lazy=True)
-    coordenador_discursos = db.relationship('CoordenadorDiscursos', backref='congregacao_ref', lazy=True)
 
 class Discurso(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -82,6 +80,9 @@ class Orador(db.Model):
     email = db.Column(db.String(100))
     aprovado = db.Column(db.Boolean, default=True)
     ativo = db.Column(db.Boolean, default=True)
+    
+    # Relacionamento simples
+    congregacao = db.relationship('Congregacao', backref=db.backref('oradores', lazy=True))
 
 class Evento(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -120,7 +121,6 @@ class UsuarioOrador(db.Model):
     
     orador = db.relationship('Orador', backref='usuario')
 
-# NOVOS MODELOS ADICIONADOS
 class HistoricoDiscurso(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data_realizacao = db.Column(db.Date, nullable=False)
@@ -143,7 +143,7 @@ class CoordenadorDiscursos(db.Model):
     data_inicio = db.Column(db.Date, default=datetime.utcnow)
     data_fim = db.Column(db.Date)
     
-    # RELACIONAMENTOS CORRIGIDOS
+    # Relacionamentos SEM backref para evitar conflitos
     congregacao = db.relationship('Congregacao', foreign_keys=[congregacao_id])
     orador = db.relationship('Orador', foreign_keys=[orador_id])
 
