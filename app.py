@@ -481,8 +481,51 @@ def dashboard():
 @app.route('/congregacoes')
 @login_required
 def listar_congregacoes():
-    congregacoes = Congregacao.query.filter_by(ativo=True).all()
-    return render_template('congregacoes/listar.html', congregacoes=congregacoes)
+    # Aplicar filtros
+    status = request.args.get('status')
+    localidade = request.args.get('localidade')
+    
+    query = Congregacao.query
+    
+    # Filtro por status
+    if status == 'ativas':
+        query = query.filter_by(ativo=True)
+    elif status == 'inativas':
+        query = query.filter_by(ativo=False)
+    
+    # Filtro por localidade
+    if localidade:
+        query = query.filter(Congregacao.localidade.ilike(f'%{localidade}%'))
+    
+    congregacoes = query.all()
+    
+    # Calcular totais para estatísticas
+    total_congregacoes = Congregacao.query.count()
+    congregacoes_ativas = Congregacao.query.filter_by(ativo=True).count()
+    congregacoes_inativas = Congregacao.query.filter_by(ativo=False).count()
+    total_oradores = Orador.query.filter_by(ativo=True).count()
+    
+    # Adicionar coordenador atual e contagem de oradores a cada congregação
+    for congregacao in congregacoes:
+        # Contar oradores ativos nesta congregação
+        congregacao.total_oradores = Orador.query.filter_by(
+            congregacao_id=congregacao.id, 
+            ativo=True
+        ).count()
+        
+        # Buscar coordenador atual
+        coordenador = CoordenadorDiscursos.query.filter_by(
+            congregacao_id=congregacao.id, 
+            ativo=True
+        ).first()
+        congregacao.coordenador_atual = coordenador
+    
+    return render_template('congregacoes/listar.html', 
+                         congregacoes=congregacoes,
+                         total_congregacoes=total_congregacoes,
+                         congregacoes_ativas=congregacoes_ativas,
+                         congregacoes_inativas=congregacoes_inativas,
+                         total_oradores=total_oradores)
 
 @app.route('/congregacoes/nova', methods=['GET', 'POST'])
 @login_required
@@ -498,6 +541,7 @@ def nova_congregacao():
         return redirect(url_for('listar_congregacoes'))
     
     return render_template('congregacoes/nova.html')
+
 @app.route('/congregacoes/<int:id>/editar', methods=['GET', 'POST'])
 @login_required
 def editar_congregacao(id):
@@ -513,6 +557,7 @@ def editar_congregacao(id):
         return redirect(url_for('listar_congregacoes'))
     
     return render_template('congregacoes/editar.html', congregacao=congregacao)
+
 @app.route('/congregacoes/<int:id>/excluir', methods=['POST'])
 @login_required
 def excluir_congregacao(id):
@@ -532,7 +577,6 @@ def excluir_congregacao(id):
     
     flash('Congregação excluída com sucesso!', 'success')
     return redirect(url_for('listar_congregacoes'))
-
 # =============================================
 # ROTAS PARA ORADORES
 # =============================================
@@ -1221,11 +1265,84 @@ def criar_usuario_orador(orador_id):
     
     return render_template('orador/criar_usuario.html', orador=orador)
 
-# =============================================
-# NOVAS ROTAS PARA AS FUNCIONALIDADES SOLICITADAS
-# =============================================
-
 # ROTAS PARA HISTÓRICO DE DISCURSOS
+@app.route('/historico')
+@login_required
+def listar_historico():
+    try:
+        # Obter todos os parâmetros de filtro
+        congregacao_id = request.args.get('congregacao_id', '').strip()
+        orador_id = request.args.get('orador_id', '').strip()
+        discurso_id = request.args.get('discurso_id', '').strip()
+        data_inicio = request.args.get('data_inicio', '').strip()
+        data_fim = request.args.get('data_fim', '').strip()
+        
+        # Query base
+        query = HistoricoDiscurso.query.order_by(HistoricoDiscurso.data_realizacao.desc())
+        
+        # Filtro por congregação
+        if congregacao_id and congregacao_id.isdigit():
+            query = query.filter(HistoricoDiscurso.congregacao_id == int(congregacao_id))
+        
+        # Filtro por orador
+        if orador_id and orador_id.isdigit():
+            query = query.filter(HistoricoDiscurso.orador_id == int(orador_id))
+        
+        # Filtro por discurso
+        if discurso_id and discurso_id.isdigit():
+            query = query.filter(HistoricoDiscurso.discurso_id == int(discurso_id))
+        
+        # Filtro por data início
+        if data_inicio:
+            try:
+                data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                query = query.filter(HistoricoDiscurso.data_realizacao >= data_inicio_obj)
+            except ValueError:
+                flash('Data de início inválida', 'warning')
+        
+        # Filtro por data fim
+        if data_fim:
+            try:
+                data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+                query = query.filter(HistoricoDiscurso.data_realizacao <= data_fim_obj)
+            except ValueError:
+                flash('Data de fim inválida', 'warning')
+        
+        # Executar query
+        historico = query.all()
+        
+        # Buscar dados para os selects
+        congregacoes = Congregacao.query.filter_by(ativo=True).all()
+        oradores = Orador.query.filter_by(ativo=True).all()
+        discursos = Discurso.query.filter_by(ativo=True).order_by(Discurso.numero).all()
+        
+        # Calcular estatísticas
+        total_registros = len(historico)
+        congregacoes_envolvidas = len(set(h.congregacao_id for h in historico))
+        oradores_envolvidos = len(set(h.orador_id for h in historico))
+        discursos_realizados = len(set(h.discurso_id for h in historico))
+        
+        return render_template('historico/listar.html', 
+                             historico=historico, 
+                             congregacoes=congregacoes,
+                             oradores=oradores,
+                             discursos=discursos,
+                             total_registros=total_registros,
+                             congregacoes_envolvidas=congregacoes_envolvidas,
+                             oradores_envolvidos=oradores_envolvidos,
+                             discursos_realizados=discursos_realizados,
+                             filtros={
+                                 'congregacao_id': congregacao_id,
+                                 'orador_id': orador_id,
+                                 'discurso_id': discurso_id,
+                                 'data_inicio': data_inicio,
+                                 'data_fim': data_fim
+                             })
+                             
+    except Exception as e:
+        flash(f'Erro ao carregar histórico: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
 @app.route('/historico/novo', methods=['GET', 'POST'])
 @login_required
 def novo_historico():
@@ -1261,23 +1378,6 @@ def novo_historico():
     return render_template('historico/novo.html',
                          discursos=discursos,
                          oradores=oradores,
-                         congregacoes=congregacoes)
-@app.route('/historico')
-@login_required
-def listar_historico():
-    # Filtro por congregação se necessário
-    congregacao_id = request.args.get('congregacao_id')
-    
-    query = HistoricoDiscurso.query.order_by(HistoricoDiscurso.data_realizacao.desc())
-    
-    if congregacao_id:
-        query = query.filter_by(congregacao_id=congregacao_id)
-    
-    historico = query.all()
-    congregacoes = Congregacao.query.filter_by(ativo=True).all()
-    
-    return render_template('historico/listar.html', 
-                         historico=historico, 
                          congregacoes=congregacoes)
 
 # ROTAS PARA COORDENADOR DE DISCURSOS
