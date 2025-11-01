@@ -61,18 +61,38 @@ class Congregacao(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     localidade = db.Column(db.String(100), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
-
+class Discurso(db.Model):
+    __tablename__ = 'speeches'
+    id = db.Column(db.Integer, primary_key=True)
+    numero = db.Column(db.Integer, nullable=False)
+    titulo = db.Column(db.String(200), nullable=False)
+    tema = db.Column(db.String(200), default="Tema a definir")
+    descricao = db.Column(db.Text)
+    duracao = db.Column(db.Integer, default=30)
+    bloqueado = db.Column(db.Boolean, default=False)
+    ativo = db.Column(db.Boolean, default=True)
 class Orador(db.Model):
     __tablename__ = 'speakers'
     id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregations.id'), nullable=False)
+    anfitriao = db.Column(db.Boolean, default=False)
+    telefone = db.Column(db.String(20))
+    email = db.Column(db.String(100))
+    aprovado = db.Column(db.Boolean, default=True)
+    ativo = db.Column(db.Boolean, default=True)
+    
+    congregacao = db.relationship('Congregacao', foreign_keys=[congregacao_id])
+class AgendaDiscurso(db.Model):
+    __tablename__ = 'speech_schedule'
+    id = db.Column(db.Integer, primary_key=True)
     data_discurso = db.Column(db.Date, nullable=False)
     horario = db.Column(db.String(10), nullable=False)
-    discurso_id = db.Column(db.Integer, db.ForeignKey('discurso.id'), nullable=False)
-    orador_id = db.Column(db.Integer, db.ForeignKey('orador.id'), nullable=False)
-    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregacao.id'), nullable=False)
-    anfitriao_id = db.Column(db.Integer, db.ForeignKey('orador.id'))
+    discurso_id = db.Column(db.Integer, db.ForeignKey('speeches.id'), nullable=False)
+    orador_id = db.Column(db.Integer, db.ForeignKey('speakers.id'), nullable=False)
+    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregations.id'), nullable=False)
+    anfitriao_id = db.Column(db.Integer, db.ForeignKey('speakers.id'))
     realizado = db.Column(db.Boolean, default=False)
-    # NOVO CAMPO: confirmação do orador
     confirmado_pelo_orador = db.Column(db.Boolean, default=False)
     data_confirmacao = db.Column(db.DateTime)
     observacoes = db.Column(db.Text)
