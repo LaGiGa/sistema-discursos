@@ -45,23 +45,38 @@ login_manager.login_view = 'login'
 
 # Modelos do Banco de Dados
 class User(UserMixin, db.Model):
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     nome = db.Column(db.String(100), nullable=False)
-    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregacao.id'))
+    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregations.id'))
     ativo = db.Column(db.Boolean, default=True)
     
-    # Relacionamento simples
-    congregacao = db.relationship('Congregacao', backref=db.backref('usuarios', lazy=True))
+    congregacao = db.relationship('Congregacao', backref=db.backref('users', lazy=True))
 
 class Congregacao(db.Model):
+    __tablename__ = 'congregations'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     localidade = db.Column(db.String(100), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
 
+class Orador(db.Model):
+    __tablename__ = 'speakers'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregations.id'), nullable=False)
+    anfitriao = db.Column(db.Boolean, default=False)
+    telefone = db.Column(db.String(20))
+    email = db.Column(db.String(100))
+    aprovado = db.Column(db.Boolean, default=True)
+    ativo = db.Column(db.Boolean, default=True)
+    
+    congregacao = db.relationship('Congregacao', backref=db.backref('speakers', lazy=True))
+
 class Discurso(db.Model):
+    __tablename__ = 'speeches'
     id = db.Column(db.Integer, primary_key=True)
     numero = db.Column(db.Integer, nullable=False)
     titulo = db.Column(db.String(200), nullable=False)
@@ -71,38 +86,15 @@ class Discurso(db.Model):
     bloqueado = db.Column(db.Boolean, default=False)
     ativo = db.Column(db.Boolean, default=True)
 
-class Orador(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregacao.id'), nullable=False)
-    anfitriao = db.Column(db.Boolean, default=False)
-    telefone = db.Column(db.String(20))
-    email = db.Column(db.String(100))
-    aprovado = db.Column(db.Boolean, default=True)
-    ativo = db.Column(db.Boolean, default=True)
-    
-    # Relacionamento simples
-    congregacao = db.relationship('Congregacao', backref=db.backref('oradores', lazy=True))
-
-class Evento(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    tipo = db.Column(db.String(50), nullable=False)
-    titulo = db.Column(db.String(200), nullable=False)
-    descricao = db.Column(db.Text)
-    data_inicio = db.Column(db.Date, nullable=False)
-    data_fim = db.Column(db.Date, nullable=False)
-    bloqueia_agenda = db.Column(db.Boolean, default=False)
-    discursos_especiais = db.Column(db.Integer, default=0)
-    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregacao.id'))
-
 class AgendaDiscurso(db.Model):
+    __tablename__ = 'speech_schedule'
     id = db.Column(db.Integer, primary_key=True)
     data_discurso = db.Column(db.Date, nullable=False)
     horario = db.Column(db.String(10), nullable=False)
-    discurso_id = db.Column(db.Integer, db.ForeignKey('discurso.id'), nullable=False)
-    orador_id = db.Column(db.Integer, db.ForeignKey('orador.id'), nullable=False)
-    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregacao.id'), nullable=False)
-    anfitriao_id = db.Column(db.Integer, db.ForeignKey('orador.id'))
+    discurso_id = db.Column(db.Integer, db.ForeignKey('speeches.id'), nullable=False)
+    orador_id = db.Column(db.Integer, db.ForeignKey('speakers.id'), nullable=False)
+    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregations.id'), nullable=False)
+    anfitriao_id = db.Column(db.Integer, db.ForeignKey('speakers.id'))
     realizado = db.Column(db.Boolean, default=False)
     observacoes = db.Column(db.Text)
     
@@ -112,21 +104,23 @@ class AgendaDiscurso(db.Model):
     anfitriao = db.relationship('Orador', foreign_keys=[anfitriao_id])
 
 class UsuarioOrador(db.Model):
+    __tablename__ = 'speaker_users'
     id = db.Column(db.Integer, primary_key=True)
-    orador_id = db.Column(db.Integer, db.ForeignKey('orador.id'), nullable=False)
+    orador_id = db.Column(db.Integer, db.ForeignKey('speakers.id'), nullable=False)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     
-    orador = db.relationship('Orador', backref='usuario')
+    orador = db.relationship('Orador', foreign_keys=[orador_id])
 
 class HistoricoDiscurso(db.Model):
+    __tablename__ = 'speech_history'
     id = db.Column(db.Integer, primary_key=True)
     data_realizacao = db.Column(db.Date, nullable=False)
-    discurso_id = db.Column(db.Integer, db.ForeignKey('discurso.id'), nullable=False)
-    orador_id = db.Column(db.Integer, db.ForeignKey('orador.id'), nullable=False)
-    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregacao.id'), nullable=False)
+    discurso_id = db.Column(db.Integer, db.ForeignKey('speeches.id'), nullable=False)
+    orador_id = db.Column(db.Integer, db.ForeignKey('speakers.id'), nullable=False)
+    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregations.id'), nullable=False)
     observacoes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -135,22 +129,23 @@ class HistoricoDiscurso(db.Model):
     congregacao = db.relationship('Congregacao', foreign_keys=[congregacao_id])
 
 class CoordenadorDiscursos(db.Model):
+    __tablename__ = 'speech_coordinators'
     id = db.Column(db.Integer, primary_key=True)
-    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregacao.id'), nullable=False)
-    orador_id = db.Column(db.Integer, db.ForeignKey('orador.id'), nullable=False)
+    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregations.id'), nullable=False)
+    orador_id = db.Column(db.Integer, db.ForeignKey('speakers.id'), nullable=False)
     telefone = db.Column(db.String(20))
     ativo = db.Column(db.Boolean, default=True)
     data_inicio = db.Column(db.Date, default=datetime.utcnow)
     data_fim = db.Column(db.Date)
     
-    # Relacionamentos SEM backref para evitar conflitos
     congregacao = db.relationship('Congregacao', foreign_keys=[congregacao_id])
     orador = db.relationship('Orador', foreign_keys=[orador_id])
 
 class OradorDiscurso(db.Model):
+    __tablename__ = 'speaker_speeches'
     id = db.Column(db.Integer, primary_key=True)
-    orador_id = db.Column(db.Integer, db.ForeignKey('orador.id'), nullable=False)
-    discurso_id = db.Column(db.Integer, db.ForeignKey('discurso.id'), nullable=False)
+    orador_id = db.Column(db.Integer, db.ForeignKey('speakers.id'), nullable=False)
+    discurso_id = db.Column(db.Integer, db.ForeignKey('speeches.id'), nullable=False)
     aceito = db.Column(db.Boolean, default=False)
     data_aceitacao = db.Column(db.DateTime)
     preparado = db.Column(db.Boolean, default=False)
@@ -159,6 +154,20 @@ class OradorDiscurso(db.Model):
     
     orador = db.relationship('Orador', foreign_keys=[orador_id])
     discurso = db.relationship('Discurso', foreign_keys=[discurso_id])
+
+class Evento(db.Model):
+    __tablename__ = 'events'
+    id = db.Column(db.Integer, primary_key=True)
+    tipo = db.Column(db.String(50), nullable=False)
+    titulo = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text)
+    data_inicio = db.Column(db.Date, nullable=False)
+    data_fim = db.Column(db.Date, nullable=False)
+    bloqueia_agenda = db.Column(db.Boolean, default=False)
+    discursos_especiais = db.Column(db.Integer, default=0)
+    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregations.id'))
+    
+    congregacao = db.relationship('Congregacao', foreign_keys=[congregacao_id])
 
 @login_manager.user_loader
 def load_user(user_id):
