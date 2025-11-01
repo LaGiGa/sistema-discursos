@@ -14,16 +14,22 @@ app.config['SECRET_KEY'] = 'chave-secreta-aqui'
 import os
 
 # Configuração do Banco de Dados
-if os.environ.get('RENDER'):
-    # PostgreSQL no Render
-    database_url = os.environ.get('DATABASE_URL')
-    if database_url and database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-else:
-    # SQLite local para desenvolvimento
+try:
+    if os.environ.get('RENDER'):
+        database_url = os.environ.get('DATABASE_URL')
+        if database_url:
+            app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+            print("✅ Conectado ao PostgreSQL no Render")
+        else:
+            raise Exception("DATABASE_URL não encontrado")
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sistema_discursos.db'
+        print("✅ Usando SQLite local")
+        
+except Exception as e:
+    print(f"⚠️  Erro na configuração do PostgreSQL: {e}")
+    print("🔄 Usando SQLite como fallback")
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sistema_discursos.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Configurações de Email (opcional)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
