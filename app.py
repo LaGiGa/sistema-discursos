@@ -13,23 +13,23 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'chave-secreta-aqui'
 import os
 
-# Configuração do Banco de Dados
-try:
-    if os.environ.get('RENDER'):
-        database_url = os.environ.get('DATABASE_URL')
-        if database_url:
-            app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-            print("✅ Conectado ao PostgreSQL no Render")
-        else:
-            raise Exception("DATABASE_URL não encontrado")
-    else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sistema_discursos.db'
-        print("✅ Usando SQLite local")
-        
-except Exception as e:
-    print(f"⚠️  Erro na configuração do PostgreSQL: {e}")
-    print("🔄 Usando SQLite como fallback")
+# CONFIGURAÇÃO DO BANCO - APENAS PG8000
+import os
+
+database_url = os.environ.get('DATABASE_URL')
+
+if database_url:
+    # Converte para formato pg8000
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql+pg8000://', 1)
+    elif database_url.startswith('postgresql://'):
+        database_url = database_url.replace('postgresql://', 'postgresql+pg8000://', 1)
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    print("✅ Conectado ao PostgreSQL via pg8000")
+else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sistema_discursos.db'
+    print("✅ Usando SQLite local")
 
 # Configurações de Email (opcional)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'

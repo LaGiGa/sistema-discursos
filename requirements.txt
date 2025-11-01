@@ -5,4 +5,3 @@ Werkzeug==2.3.7
 gunicorn==21.2.0
 reportlab==4.0.4
 pg8000==1.30.4
-psycopg2-binary==2.9.7
