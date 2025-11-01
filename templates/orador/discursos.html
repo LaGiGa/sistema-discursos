@@ -21,6 +21,19 @@
 </head>
 <body>
     <!-- Header -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>Minha Área</h5>
+        <div class="d-grid gap-2">
+            <a href="{{ url_for('orador_aceitar_discursos', orador_id=orador.id) }}" class="btn btn-primary">
+                <i class="bi bi-journal-check"></i> Aceitar Discursos
+            </a>
+            <a href="{{ url_for('orador_discursos_preparados', orador_id=orador.id) }}" class="btn btn-success">
+                <i class="bi bi-list-check"></i> Meus Discursos Preparados
+            </a>
+        </div>
+    </div>
+</div>
     <div class="header py-4 mb-4">
         <div class="container">
             <div class="row align-items-center">
