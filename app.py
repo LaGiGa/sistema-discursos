@@ -13,11 +13,8 @@ import io
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'chave-secreta-aqui'
-import os
 
 # CONFIGURAÇÃO DO BANCO - APENAS PG8000
-import os
-
 database_url = os.environ.get('DATABASE_URL')
 
 if database_url:
@@ -63,6 +60,7 @@ class Congregacao(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     localidade = db.Column(db.String(100), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
+
 class Discurso(db.Model):
     __tablename__ = 'speeches'
     id = db.Column(db.Integer, primary_key=True)
@@ -73,6 +71,7 @@ class Discurso(db.Model):
     duracao = db.Column(db.Integer, default=30)
     bloqueado = db.Column(db.Boolean, default=False)
     ativo = db.Column(db.Boolean, default=True)
+
 class Orador(db.Model):
     __tablename__ = 'speakers'
     id = db.Column(db.Integer, primary_key=True)
@@ -85,6 +84,7 @@ class Orador(db.Model):
     ativo = db.Column(db.Boolean, default=True)
     
     congregacao = db.relationship('Congregacao', foreign_keys=[congregacao_id])
+
 class AgendaDiscurso(db.Model):
     __tablename__ = 'speech_schedule'
     id = db.Column(db.Integer, primary_key=True)
@@ -228,7 +228,7 @@ def criar_dados_iniciais():
                 (23, "A vida tem objetivo", "Objetivo da Vida"),
                 (24, "Você encontrou 'uma pérola de grande valor'?", "Valor Espiritual"),
                 (25, "Lute contra o espírito do mundo", "Luta Espiritual"),
-                (26, "Você é importante para God?", "Importância para Deus"),
+                (26, "Você é importante para Deus?", "Importância para Deus"),
                 (27, "Como construir um casamento feliz", "Casamento Feliz"),
                 (28, "Mostre respeito e amor no seu casamento", "Respeito no Casamento"),
                 (29, "As responsabilidades e recompensas de ter filhos", "Paternidade"),
@@ -359,7 +359,7 @@ def criar_dados_iniciais():
                 (154, "O governo humano é pesado na balança", "Governo Humano"),
                 (155, "Chegou a hora do julgamento de Babilônia?", "Julgamento de Babilônia"),
                 (156, "O Dia do Juízo — Tempo de temor ou de esperança?", "Dia do Juízo"),
-                (157, "Como os verdadeivos cristãos adornam o ensino divino", "Ensino Divino"),
+                (157, "Como os verdadeiros cristãos adornam o ensino divino", "Ensino Divino"),
                 (158, "Seja corajoso e confie em Jeová", "Coragem"),
                 (159, "Como encontrar segurança num mundo perigoso", "Segurança"),
                 (160, "Mantenha a identidade cristã!", "Identidade Cristã"),
@@ -1954,7 +1954,6 @@ def inicializar_banco():
 
 # Executa a inicialização quando o app startar
 inicializar_banco()
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
