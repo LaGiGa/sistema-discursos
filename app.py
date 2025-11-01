@@ -57,9 +57,11 @@ class Congregacao(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     localidade = db.Column(db.String(100), nullable=False)
     ativo = db.Column(db.Boolean, default=True)
-    usuarios = db.relationship('User', backref='congregacao', lazy=True)
-    oradores = db.relationship('Orador', backref='congregacao', lazy=True)
-    coordenador_discursos = db.relationship('CoordenadorDiscursos', backref='congregacao', lazy=True)
+    
+    # RELACIONAMENTOS CORRIGIDOS - remover backref duplicados
+    usuarios = db.relationship('User', backref='congregacao_ref', lazy=True)
+    oradores = db.relationship('Orador', backref='congregacao_ref', lazy=True)
+    coordenador_discursos = db.relationship('CoordenadorDiscursos', backref='congregacao_ref', lazy=True)
 
 class Discurso(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -141,6 +143,7 @@ class CoordenadorDiscursos(db.Model):
     data_inicio = db.Column(db.Date, default=datetime.utcnow)
     data_fim = db.Column(db.Date)
     
+    # RELACIONAMENTOS CORRIGIDOS
     congregacao = db.relationship('Congregacao', foreign_keys=[congregacao_id])
     orador = db.relationship('Orador', foreign_keys=[orador_id])
 
