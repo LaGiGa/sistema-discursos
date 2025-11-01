@@ -65,37 +65,16 @@ class Congregacao(db.Model):
 class Orador(db.Model):
     __tablename__ = 'speakers'
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
-    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregations.id'), nullable=False)
-    anfitriao = db.Column(db.Boolean, default=False)
-    telefone = db.Column(db.String(20))
-    email = db.Column(db.String(100))
-    aprovado = db.Column(db.Boolean, default=True)
-    ativo = db.Column(db.Boolean, default=True)
-    
-    congregacao = db.relationship('Congregacao', backref=db.backref('speakers', lazy=True))
-
-class Discurso(db.Model):
-    __tablename__ = 'speeches'
-    id = db.Column(db.Integer, primary_key=True)
-    numero = db.Column(db.Integer, nullable=False)
-    titulo = db.Column(db.String(200), nullable=False)
-    tema = db.Column(db.String(200), default="Tema a definir")
-    descricao = db.Column(db.Text)
-    duracao = db.Column(db.Integer, default=30)
-    bloqueado = db.Column(db.Boolean, default=False)
-    ativo = db.Column(db.Boolean, default=True)
-
-class AgendaDiscurso(db.Model):
-    __tablename__ = 'speech_schedule'
-    id = db.Column(db.Integer, primary_key=True)
     data_discurso = db.Column(db.Date, nullable=False)
     horario = db.Column(db.String(10), nullable=False)
-    discurso_id = db.Column(db.Integer, db.ForeignKey('speeches.id'), nullable=False)
-    orador_id = db.Column(db.Integer, db.ForeignKey('speakers.id'), nullable=False)
-    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregations.id'), nullable=False)
-    anfitriao_id = db.Column(db.Integer, db.ForeignKey('speakers.id'))
+    discurso_id = db.Column(db.Integer, db.ForeignKey('discurso.id'), nullable=False)
+    orador_id = db.Column(db.Integer, db.ForeignKey('orador.id'), nullable=False)
+    congregacao_id = db.Column(db.Integer, db.ForeignKey('congregacao.id'), nullable=False)
+    anfitriao_id = db.Column(db.Integer, db.ForeignKey('orador.id'))
     realizado = db.Column(db.Boolean, default=False)
+    # NOVO CAMPO: confirmação do orador
+    confirmado_pelo_orador = db.Column(db.Boolean, default=False)
+    data_confirmacao = db.Column(db.DateTime)
     observacoes = db.Column(db.Text)
     
     discurso = db.relationship('Discurso', foreign_keys=[discurso_id])
@@ -898,14 +877,45 @@ def toggle_all_discursos():
     return redirect(url_for('listar_discursos'))
 
 # =============================================
-# ROTAS PARA AGENDA
+# =============================================
+# ROTAS PARA AGENDA (ATUALIZADAS)
 # =============================================
 
 @app.route('/agenda')
 @login_required
 def listar_agenda():
-    agenda = AgendaDiscurso.query.order_by(AgendaDiscurso.data_discurso).all()
-    return render_template('agenda/listar.html', agenda=agenda, today=date.today())
+    # Filtros
+    data_inicio = request.args.get('data_inicio')
+    data_fim = request.args.get('data_fim')
+    congregacao_id = request.args.get('congregacao_id')
+    confirmacao = request.args.get('confirmacao')
+    
+    query = AgendaDiscurso.query
+    
+    # Aplicar filtros
+    if data_inicio:
+        data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+        query = query.filter(AgendaDiscurso.data_discurso >= data_inicio)
+    
+    if data_fim:
+        data_fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
+        query = query.filter(AgendaDiscurso.data_discurso <= data_fim)
+    
+    if congregacao_id:
+        query = query.filter_by(congregacao_id=congregacao_id)
+    
+    if confirmacao == 'confirmados':
+        query = query.filter_by(confirmado_pelo_orador=True)
+    elif confirmacao == 'pendentes':
+        query = query.filter_by(confirmado_pelo_orador=False)
+    
+    agenda = query.order_by(AgendaDiscurso.data_discurso).all()
+    congregacoes = Congregacao.query.filter_by(ativo=True).all()
+    
+    return render_template('agenda/listar.html', 
+                         agenda=agenda, 
+                         congregacoes=congregacoes,
+                         today=date.today())
 
 @app.route('/agenda/novo', methods=['GET', 'POST'])
 @login_required
@@ -929,7 +939,8 @@ def novo_agendamento():
             discurso_id=discurso_id,
             orador_id=orador_id,
             congregacao_id=congregacao_id,
-            anfitriao_id=anfitriao_id if anfitriao_id else None
+            anfitriao_id=anfitriao_id if anfitriao_id else None,
+            confirmado_pelo_orador=False  # Novo campo
         )
         
         db.session.add(agendamento)
@@ -978,6 +989,7 @@ def editar_agendamento(id):
             agendamento.congregacao_id = congregacao_id
             agendamento.anfitriao_id = anfitriao_id if anfitriao_id else None
             agendamento.realizado = realizado
+            # Nota: confirmado_pelo_orador só é alterado pelo próprio orador
             
             db.session.commit()
             flash('Agendamento atualizado com sucesso!', 'success')
@@ -1043,6 +1055,42 @@ def enviar_discurso_orador(id):
     agendamento = AgendaDiscurso.query.get_or_404(id)
     flash(f'Discurso enviado para {agendamento.orador.nome}!', 'success')
     return redirect(url_for('listar_agenda'))
+
+# =============================================
+# ROTAS PARA CONFIRMAÇÃO DE DISCURSOS (NOVAS)
+# =============================================
+
+@app.route('/orador/<int:orador_id>/confirmar-discurso/<int:agenda_id>', methods=['POST'])
+def confirmar_discurso_agendado(orador_id, agenda_id):
+    agenda = AgendaDiscurso.query.get_or_404(agenda_id)
+    
+    # Verificar se o discurso pertence ao orador
+    if agenda.orador_id != orador_id:
+        flash('Este discurso não está agendado para você!', 'error')
+        return redirect(url_for('orador_discursos', orador_id=orador_id))
+    
+    agenda.confirmado_pelo_orador = True
+    agenda.data_confirmacao = datetime.utcnow()
+    db.session.commit()
+    
+    flash(f'Discurso #{agenda.discurso.numero} confirmado para {agenda.data_discurso.strftime("%d/%m/%Y")}!', 'success')
+    return redirect(url_for('orador_discursos', orador_id=orador_id))
+
+@app.route('/orador/<int:orador_id>/cancelar-confirmacao/<int:agenda_id>', methods=['POST'])
+def cancelar_confirmacao_discurso(orador_id, agenda_id):
+    agenda = AgendaDiscurso.query.get_or_404(agenda_id)
+    
+    # Verificar se o discurso pertence ao orador
+    if agenda.orador_id != orador_id:
+        flash('Este discurso não está agendado para você!', 'error')
+        return redirect(url_for('orador_discursos', orador_id=orador_id))
+    
+    agenda.confirmado_pelo_orador = False
+    agenda.data_confirmacao = None
+    db.session.commit()
+    
+    flash('Confirmação do discurso cancelada!', 'warning')
+    return redirect(url_for('orador_discursos', orador_id=orador_id))
 
 # =============================================
 # SISTEMA DE LOGIN PARA ORADORES
@@ -1296,6 +1344,41 @@ def admin_discursos_aceitos():
                          discursos_aceitos=discursos_aceitos,
                          congregacoes=congregacoes,
                          oradores=oradores)
+# =============================================
+# ROTAS PARA CONFIRMAÇÃO DE DISCURSOS
+# =============================================
+
+@app.route('/orador/<int:orador_id>/confirmar-discurso/<int:agenda_id>', methods=['POST'])
+def confirmar_discurso_agendado(orador_id, agenda_id):
+    agenda = AgendaDiscurso.query.get_or_404(agenda_id)
+    
+    # Verificar se o discurso pertence ao orador
+    if agenda.orador_id != orador_id:
+        flash('Este discurso não está agendado para você!', 'error')
+        return redirect(url_for('orador_discursos', orador_id=orador_id))
+    
+    agenda.confirmado_pelo_orador = True
+    agenda.data_confirmacao = datetime.utcnow()
+    db.session.commit()
+    
+    flash(f'Discurso #{agenda.discurso.numero} confirmado para {agenda.data_discurso.strftime("%d/%m/%Y")}!', 'success')
+    return redirect(url_for('orador_discursos', orador_id=orador_id))
+
+@app.route('/orador/<int:orador_id>/cancelar-confirmacao/<int:agenda_id>', methods=['POST'])
+def cancelar_confirmacao_discurso(orador_id, agenda_id):
+    agenda = AgendaDiscurso.query.get_or_404(agenda_id)
+    
+    # Verificar se o discurso pertence ao orador
+    if agenda.orador_id != orador_id:
+        flash('Este discurso não está agendado para você!', 'error')
+        return redirect(url_for('orador_discursos', orador_id=orador_id))
+    
+    agenda.confirmado_pelo_orador = False
+    agenda.data_confirmacao = None
+    db.session.commit()
+    
+    flash('Confirmação do discurso cancelada!', 'warning')
+    return redirect(url_for('orador_discursos', orador_id=orador_id))
 
 # =============================================
 # SISTEMA DE USUÁRIOS ADMINISTRADORES

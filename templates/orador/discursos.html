@@ -10,6 +10,9 @@
         .navbar-brand {
             font-weight: 700;
         }
+        .table-actions {
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -66,8 +69,10 @@
                         {% endif %}
                     </div>
                     <div class="col-md-6">
-                        <h5>Próximos Discursos</h5>
-                        <p class="mb-0"><strong>Agendados:</strong> {{ discursos|length }}</p>
+                        <h5>Estatísticas</h5>
+                        <p class="mb-1"><strong>Agendados:</strong> {{ discursos|length }}</p>
+                        <p class="mb-1"><strong>Confirmados:</strong> {{ discursos|selectattr('confirmado_pelo_orador')|list|length }}</p>
+                        <p class="mb-0"><strong>Pendentes:</strong> {{ discursos|rejectattr('confirmado_pelo_orador')|list|length }}</p>
                     </div>
                 </div>
             </div>
@@ -86,6 +91,8 @@
                                     <th>Discurso</th>
                                     <th>Congregação</th>
                                     <th>Status</th>
+                                    <th>Confirmação</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -105,10 +112,69 @@
                                             <span class="badge bg-warning">Agendado</span>
                                         {% endif %}
                                     </td>
+                                    <td>
+                                        {% if discurso.confirmado_pelo_orador %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Confirmado
+                                            </span>
+                                            <br>
+                                            <small class="text-muted">{{ discurso.data_confirmacao.strftime('%d/%m/%Y') }}</small>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Pendente</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="table-actions">
+                                        {% if not discurso.realizado %}
+                                            {% if discurso.confirmado_pelo_orador %}
+                                                <form action="{{ url_for('cancelar_confirmacao_discurso', orador_id=orador.id, agenda_id=discurso.id) }}" method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-outline-warning btn-sm" 
+                                                            onclick="return confirm('Cancelar confirmação deste discurso?')">
+                                                        <i class="bi bi-x-circle"></i> Cancelar
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <form action="{{ url_for('confirmar_discurso_agendado', orador_id=orador.id, agenda_id=discurso.id) }}" method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-success btn-sm">
+                                                        <i class="bi bi-check-lg"></i> Confirmar
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumo -->
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center py-2">
+                            <h5 class="card-title text-primary">{{ discursos|length }}</h5>
+                            <p class="card-text mb-0">Total Agendados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center py-2">
+                            <h5 class="card-title text-success">{{ discursos|selectattr('confirmado_pelo_orador')|list|length }}</h5>
+                            <p class="card-text mb-0">Confirmados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center py-2">
+                            <h5 class="card-title text-warning">{{ discursos|rejectattr('confirmado_pelo_orador')|list|length }}</h5>
+                            <p class="card-text mb-0">Pendentes</p>
+                        </div>
                     </div>
                 </div>
             </div>

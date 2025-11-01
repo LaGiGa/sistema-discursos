@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Agenda - Sistema de Discursos{% endblock %}
+{% block title %}Agenda de Discursos - Sistema de Discursos{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -10,6 +10,90 @@
     </a>
 </div>
 
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="data_inicio" class="form-label">Data Início:</label>
+                <input type="date" class="form-control" id="data_inicio" name="data_inicio" 
+                       value="{{ request.args.get('data_inicio', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="data_fim" class="form-label">Data Fim:</label>
+                <input type="date" class="form-control" id="data_fim" name="data_fim" 
+                       value="{{ request.args.get('data_fim', '') }}">
+            </div>
+            <div class="col-md-2">
+                <label for="congregacao_id" class="form-label">Congregação:</label>
+                <select name="congregacao_id" id="congregacao_id" class="form-select">
+                    <option value="">Todas</option>
+                    {% for congregacao in congregacoes %}
+                        <option value="{{ congregacao.id }}" {% if request.args.get('congregacao_id')|int == congregacao.id %}selected{% endif %}>
+                            {{ congregacao.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="confirmacao" class="form-label">Confirmação:</label>
+                <select name="confirmacao" id="confirmacao" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="confirmados" {% if request.args.get('confirmacao') == 'confirmados' %}selected{% endif %}>Confirmados</option>
+                    <option value="pendentes" {% if request.args.get('confirmacao') == 'pendentes' %}selected{% endif %}>Pendentes</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <div class="d-flex gap-2 w-100">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                    <a href="{{ url_for('listar_agenda') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Estatísticas Rápidas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center py-3">
+                <h4 class="card-title">{{ agenda|length }}</h4>
+                <p class="card-text mb-0">Total Agendados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center py-3">
+                <h4 class="card-title">{{ agenda|selectattr('confirmado_pelo_orador')|list|length }}</h4>
+                <p class="card-text mb-0">Confirmados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body text-center py-3">
+                <h4 class="card-title">{{ agenda|rejectattr('confirmado_pelo_orador')|list|length }}</h4>
+                <p class="card-text mb-0">Pendentes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center py-3">
+                <h4 class="card-title">{{ agenda|selectattr('realizado')|list|length }}</h4>
+                <p class="card-text mb-0">Realizados</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Agenda -->
 <div class="card">
     <div class="card-body">
         {% if agenda %}
@@ -22,88 +106,71 @@
                             <th>Discurso</th>
                             <th>Orador</th>
                             <th>Congregação</th>
-                            <th>Anfitrião</th>
+                            <th>Confirmação</th>
                             <th>Status</th>
-                            <th width="150">Ações</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in agenda %}
                         <tr>
-                            <td>{{ item.data_discurso.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {{ item.data_discurso.strftime('%d/%m/%Y') }}
+                                {% if item.data_discurso < today %}
+                                    <br><small class="text-danger">Vencido</small>
+                                {% endif %}
+                            </td>
                             <td>{{ item.horario }}</td>
                             <td>
-                                <strong>#{{ item.discurso.numero }}</strong> - {{ item.discurso.titulo }}
+                                <strong>#{{ item.discurso.numero }}</strong><br>
+                                <small class="text-muted">{{ item.discurso.titulo }}</small>
                             </td>
-                            <td>{{ item.orador.nome }}</td>
+                            <td>
+                                {{ item.orador.nome }}
+                                {% if item.orador.telefone %}
+                                    <br><small class="text-muted">{{ item.orador.telefone }}</small>
+                                {% endif %}
+                            </td>
                             <td>{{ item.congregacao.nome }}</td>
                             <td>
-                                {% if item.anfitriao %}
-                                    {{ item.anfitriao.nome }}
+                                {% if item.confirmado_pelo_orador %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Confirmado
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">{{ item.data_confirmacao.strftime('%d/%m/%Y %H:%M') }}</small>
                                 {% else %}
-                                    <span class="text-muted">-</span>
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-clock"></i> Pendente
+                                    </span>
                                 {% endif %}
                             </td>
                             <td>
                                 {% if item.realizado %}
                                     <span class="badge bg-success">Realizado</span>
                                 {% else %}
-                                    <span class="badge bg-warning">Agendado</span>
+                                    <span class="badge bg-secondary">Agendado</span>
                                 {% endif %}
                             </td>
                             <td class="table-actions">
                                 <div class="btn-group btn-group-sm">
-                                    <!-- Botão Enviar -->
-                                    <form action="{{ url_for('enviar_discurso_orador', id=item.id) }}" method="POST" class="d-inline">
-                                        <button type="submit" class="btn btn-outline-info" title="Enviar detalhes para o orador">
-                                            <i class="bi bi-send"></i>
-                                        </button>
-                                    </form>
-                                    
-                                    <!-- Botão Editar -->
-                                    <a href="{{ url_for('editar_agendamento', id=item.id) }}" 
-                                       class="btn btn-outline-primary" title="Editar agendamento">
+                                    <a href="{{ url_for('editar_agendamento', id=item.id) }}" class="btn btn-outline-primary" title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    
-                                    <!-- Botão Excluir (apenas para agendamentos futuros) -->
-                                    {% if item.data_discurso >= today %}
-                                    <button type="button" class="btn btn-outline-danger" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#modalExcluir{{ item.id }}"
-                                            title="Excluir agendamento">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    {% if not item.realizado %}
+                                        <form action="{{ url_for('realizar_discurso', id=item.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-success" title="Marcar como realizado">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
                                     {% endif %}
+                                    <form action="{{ url_for('excluir_agendamento', id=item.id) }}" method="POST" class="d-inline" 
+                                          onsubmit="return confirm('Tem certeza que deseja excluir este agendamento?')">
+                                        <button type="submit" class="btn btn-outline-danger" title="Excluir">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
-
-                                <!-- Modal de Exclusão -->
-                                {% if item.data_discurso >= today %}
-                                <div class="modal fade" id="modalExcluir{{ item.id }}" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Confirmar Exclusão</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p>Tem certeza que deseja excluir este agendamento?</p>
-                                                <div class="alert alert-warning">
-                                                    <strong>Discurso:</strong> {{ item.discurso.titulo }}<br>
-                                                    <strong>Orador:</strong> {{ item.orador.nome }}<br>
-                                                    <strong>Data:</strong> {{ item.data_discurso.strftime('%d/%m/%Y') }} às {{ item.horario }}
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                <form action="{{ url_for('excluir_agendamento', id=item.id) }}" method="POST" class="d-inline">
-                                                    <button type="submit" class="btn btn-danger">Excluir</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -111,15 +178,42 @@
                 </table>
             </div>
         {% else %}
-            <div class="text-center py-4">
+            <div class="text-center py-5">
                 <i class="bi bi-calendar-x fs-1 text-muted"></i>
                 <h5 class="text-muted mt-3">Nenhum discurso agendado</h5>
-                <p class="text-muted">Comece agendando o primeiro discurso</p>
+                <p class="text-muted">
+                    {% if request.args.get('confirmacao') or request.args.get('congregacao_id') or request.args.get('data_inicio') %}
+                        Nenhum resultado encontrado para os filtros aplicados.
+                    {% else %}
+                        Comece agendando o primeiro discurso.
+                    {% endif %}
+                </p>
                 <a href="{{ url_for('novo_agendamento') }}" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Agendar Primeiro Discurso
                 </a>
             </div>
         {% endif %}
+    </div>
+</div>
+
+<!-- Informações -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h6><i class="bi bi-info-circle"></i> Legenda das Confirmações:</h6>
+        <div class="row">
+            <div class="col-md-4">
+                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Confirmado</span>
+                <small class="text-muted"> - Orador confirmou o discurso</small>
+            </div>
+            <div class="col-md-4">
+                <span class="badge bg-warning"><i class="bi bi-clock"></i> Pendente</span>
+                <small class="text-muted"> - Aguardando confirmação do orador</small>
+            </div>
+            <div class="col-md-4">
+                <span class="badge bg-success">Realizado</span>
+                <small class="text-muted"> - Discurso já foi realizado</small>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
