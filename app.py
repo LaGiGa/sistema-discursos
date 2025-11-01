@@ -498,6 +498,40 @@ def nova_congregacao():
         return redirect(url_for('listar_congregacoes'))
     
     return render_template('congregacoes/nova.html')
+@app.route('/congregacoes/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+def editar_congregacao(id):
+    congregacao = Congregacao.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        congregacao.nome = request.form['nome']
+        congregacao.localidade = request.form['localidade']
+        congregacao.ativo = 'ativo' in request.form
+        
+        db.session.commit()
+        flash('Congregação atualizada com sucesso!', 'success')
+        return redirect(url_for('listar_congregacoes'))
+    
+    return render_template('congregacoes/editar.html', congregacao=congregacao)
+@app.route('/congregacoes/<int:id>/excluir', methods=['POST'])
+@login_required
+def excluir_congregacao(id):
+    congregacao = Congregacao.query.get_or_404(id)
+    
+    # Verificar se existem registros vinculados
+    usuarios_vinculados = User.query.filter_by(congregacao_id=id, ativo=True).count()
+    oradores_vinculados = Orador.query.filter_by(congregacao_id=id, ativo=True).count()
+    
+    if usuarios_vinculados > 0 or oradores_vinculados > 0:
+        flash('Não é possível excluir esta congregação pois existem usuários ou oradores vinculados a ela!', 'error')
+        return redirect(url_for('listar_congregacoes'))
+    
+    # Exclusão lógica (marcar como inativa)
+    congregacao.ativo = False
+    db.session.commit()
+    
+    flash('Congregação excluída com sucesso!', 'success')
+    return redirect(url_for('listar_congregacoes'))
 
 # =============================================
 # ROTAS PARA ORADORES
