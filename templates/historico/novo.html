@@ -18,7 +18,7 @@
                         <div class="col-md-6">
                             <label for="data_realizacao" class="form-label">Data do Discurso *</label>
                             <input type="date" class="form-control" id="data_realizacao" name="data_realizacao" 
-                                   value="{{ request.form.data_realizacao or '' }}" required>
+                                   value="{{ request.form.data_realizacao if request.form }}" required>
                         </div>
 
                         <!-- Congregação -->
@@ -28,7 +28,7 @@
                                 <option value="">Selecione uma congregação</option>
                                 {% for congregacao in congregacoes %}
                                     <option value="{{ congregacao.id }}" 
-                                            {% if request.form.congregacao_id|int == congregacao.id %}selected{% endif %}>
+                                            {% if request.form and request.form.congregacao_id|int == congregacao.id %}selected{% endif %}>
                                         {{ congregacao.nome }}
                                     </option>
                                 {% endfor %}
@@ -42,7 +42,7 @@
                                 <option value="">Selecione um orador</option>
                                 {% for orador in oradores %}
                                     <option value="{{ orador.id }}" 
-                                            {% if request.form.orador_id|int == orador.id %}selected{% endif %}>
+                                            {% if request.form and request.form.orador_id|int == orador.id %}selected{% endif %}>
                                         {{ orador.nome }} - {{ orador.congregacao.nome }}
                                     </option>
                                 {% endfor %}
@@ -56,7 +56,7 @@
                                 <option value="">Selecione um discurso</option>
                                 {% for discurso in discursos %}
                                     <option value="{{ discurso.id }}" 
-                                            {% if request.form.discurso_id|int == discurso.id %}selected{% endif %}>
+                                            {% if request.form and request.form.discurso_id|int == discurso.id %}selected{% endif %}>
                                         #{{ discurso.numero }} - {{ discurso.titulo }}
                                     </option>
                                 {% endfor %}
@@ -67,7 +67,7 @@
                         <div class="col-12">
                             <label for="observacoes" class="form-label">Observações</label>
                             <textarea class="form-control" id="observacoes" name="observacoes" 
-                                      rows="3" placeholder="Observações sobre o discurso...">{{ request.form.observacoes or '' }}</textarea>
+                                      rows="3" placeholder="Observações sobre o discurso...">{% if request.form %}{{ request.form.observacoes }}{% endif %}</textarea>
                         </div>
                     </div>
 
