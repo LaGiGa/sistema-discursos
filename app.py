@@ -1491,16 +1491,43 @@ def gerar_pdf():
         flash(f'Erro ao gerar PDF: {str(e)}', 'error')
         return redirect(url_for('relatorios_pdf'))
 
-if __name__ == '__main__':
+# =============================================
+# INICIALIZAÇÃO FORÇADA DO BANCO
+# =============================================
+
+def inicializar_banco():
+    """Força a criação de todas as tabelas e dados iniciais"""
     with app.app_context():
-        # FORÇAR RECRIAÇÃO DO BANCO NA PRIMEIRA EXECUÇÃO
         try:
+            print("🔄 Iniciando inicialização do banco de dados...")
+            
+            # Drop todas as tabelas para recomeçar
+            print("🗑️  Removendo tabelas existentes...")
             db.drop_all()
-        except:
-            pass
-        db.create_all()
-        criar_dados_iniciais()
-        print("✅ Banco configurado e dados iniciais criados!")
-    
+            
+            # Cria todas as tabelas
+            print("📦 Criando novas tabelas...")
+            db.create_all()
+            
+            # Cria dados iniciais
+            print("🌱 Criando dados iniciais...")
+            criar_dados_iniciais()
+            
+            print("✅ Banco de dados inicializado com sucesso!")
+            
+        except Exception as e:
+            print(f"❌ Erro na inicialização do banco: {e}")
+            # Tenta criar apenas as tabelas se o drop falhar
+            try:
+                db.create_all()
+                criar_dados_iniciais()
+                print("✅ Tabelas criadas com fallback")
+            except Exception as e2:
+                print(f"❌ Erro crítico: {e2}")
+
+# Executa a inicialização quando o app startar
+inicializar_banco()
+
+if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
