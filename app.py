@@ -1493,9 +1493,14 @@ def gerar_pdf():
 
 if __name__ == '__main__':
     with app.app_context():
+        # FORÇAR RECRIAÇÃO DO BANCO NA PRIMEIRA EXECUÇÃO
+        try:
+            db.drop_all()
+        except:
+            pass
         db.create_all()
         criar_dados_iniciais()
+        print("✅ Banco configurado e dados iniciais criados!")
     
-    # Para produção
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
