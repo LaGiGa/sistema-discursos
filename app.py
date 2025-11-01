@@ -1,3 +1,5 @@
+[file name]: app.py
+[file content begin]
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -226,7 +228,7 @@ def criar_dados_iniciais():
                 (23, "A vida tem objetivo", "Objetivo da Vida"),
                 (24, "Você encontrou 'uma pérola de grande valor'?", "Valor Espiritual"),
                 (25, "Lute contra o espírito do mundo", "Luta Espiritual"),
-                (26, "Você é importante para Deus?", "Importância para Deus"),
+                (26, "Você é importante para God?", "Importância para Deus"),
                 (27, "Como construir um casamento feliz", "Casamento Feliz"),
                 (28, "Mostre respeito e amor no seu casamento", "Respeito no Casamento"),
                 (29, "As responsabilidades e recompensas de ter filhos", "Paternidade"),
@@ -357,7 +359,7 @@ def criar_dados_iniciais():
                 (154, "O governo humano é pesado na balança", "Governo Humano"),
                 (155, "Chegou a hora do julgamento de Babilônia?", "Julgamento de Babilônia"),
                 (156, "O Dia do Juízo — Tempo de temor ou de esperança?", "Dia do Juízo"),
-                (157, "Como os verdadeiros cristãos adornam o ensino divino", "Ensino Divino"),
+                (157, "Como os verdadeivos cristãos adornam o ensino divino", "Ensino Divino"),
                 (158, "Seja corajoso e confie em Jeová", "Coragem"),
                 (159, "Como encontrar segurança num mundo perigoso", "Segurança"),
                 (160, "Mantenha a identidade cristã!", "Identidade Cristã"),
@@ -382,7 +384,7 @@ def criar_dados_iniciais():
                 (179, "Rejeite as fantasias do mundo, empenhe-se pelas realidades do Reino", "Realidades do Reino"),
                 (180, "A ressurreição — Por que essa esperança deve ser real para você", "Esperança da Ressurreição"),
                 (181, "Já é mais tarde do que você imagina?", "Tempo"),
-                (182, "O que o Reino de Deus está fazendo por nós agora?", "Reino de Deus"),
+                (182, "O que o Reino de Deus está fazendo por nós now?", "Reino de Deus"),
                 (183, "Desvie seus olhos do que é fútil!", "Futilidade"),
                 (184, "A morte é o fim de tudo?", "Morte"),
                 (185, "Será que a verdade influencia sua vida?", "Influência da Verdade"),
@@ -577,6 +579,7 @@ def excluir_congregacao(id):
     
     flash('Congregação excluída com sucesso!', 'success')
     return redirect(url_for('listar_congregacoes'))
+
 # =============================================
 # ROTAS PARA ORADORES
 # =============================================
@@ -872,7 +875,7 @@ def importar_discursos():
 101. Jeová é o "Grandioso Criador"
 102. Preste atenção à "palavra profética"
 103. Como você pode ter a verdadeira alegria?
-104. Pais, vocês estão construining com materiais à prova de fogo?
+104. Pais, vocês estão construindo com materiais à prova de fogo?
 105. Somos consolados em todas as nossas tribulações
 106. Arruinar a Terra provocará retribuição divina
 107. Você está treinando bem a sua consciência?
@@ -993,7 +996,6 @@ def toggle_all_discursos():
     flash(f'Todos os discursos foram {acao_texto}!', 'success')
     return redirect(url_for('listar_discursos'))
 
-# =============================================
 # =============================================
 # ROTAS PARA AGENDA (ATUALIZADAS)
 # =============================================
@@ -1265,7 +1267,10 @@ def criar_usuario_orador(orador_id):
     
     return render_template('orador/criar_usuario.html', orador=orador)
 
+# =============================================
 # ROTAS PARA HISTÓRICO DE DISCURSOS
+# =============================================
+
 @app.route('/historico')
 @login_required
 def listar_historico():
@@ -1379,6 +1384,169 @@ def novo_historico():
                          discursos=discursos,
                          oradores=oradores,
                          congregacoes=congregacoes)
+
+@app.route('/historico/exportar-pdf')
+@login_required
+def exportar_historico_pdf():
+    try:
+        # Verificar se reportlab está instalado
+        try:
+            from reportlab.lib.pagesizes import A4
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib import colors
+            from reportlab.pdfbase import pdfmetrics
+            from reportlab.pdfbase.ttfonts import TTFont
+        except ImportError:
+            flash('Módulo reportlab não está instalado. Entre em contato com o administrador.', 'error')
+            return redirect(url_for('listar_historico'))
+
+        # Obter os mesmos filtros da listagem
+        congregacao_id = request.args.get('congregacao_id', '').strip()
+        orador_id = request.args.get('orador_id', '').strip()
+        discurso_id = request.args.get('discurso_id', '').strip()
+        data_inicio = request.args.get('data_inicio', '').strip()
+        data_fim = request.args.get('data_fim', '').strip()
+        
+        # Aplicar os mesmos filtros da listagem
+        query = HistoricoDiscurso.query.order_by(HistoricoDiscurso.data_realizacao.desc())
+        
+        if congregacao_id and congregacao_id.isdigit():
+            query = query.filter(HistoricoDiscurso.congregacao_id == int(congregacao_id))
+        
+        if orador_id and orador_id.isdigit():
+            query = query.filter(HistoricoDiscurso.orador_id == int(orador_id))
+        
+        if discurso_id and discurso_id.isdigit():
+            query = query.filter(HistoricoDiscurso.discurso_id == int(discurso_id))
+        
+        if data_inicio:
+            try:
+                data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                query = query.filter(HistoricoDiscurso.data_realizacao >= data_inicio_obj)
+            except ValueError:
+                pass
+        
+        if data_fim:
+            try:
+                data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+                query = query.filter(HistoricoDiscurso.data_realizacao <= data_fim_obj)
+            except ValueError:
+                pass
+        
+        historico = query.all()
+        
+        if not historico:
+            flash('Nenhum dado encontrado para exportar com os filtros aplicados.', 'warning')
+            return redirect(url_for('listar_historico'))
+
+        # Criar PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=30)
+        
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Título
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=20,
+            alignment=1,
+            textColor=colors.HexColor('#2c3e50')
+        )
+        
+        elements.append(Paragraph("RELATÓRIO DE HISTÓRICO DE DISCURSOS", title_style))
+        
+        # Informações dos filtros
+        filtros_texto = []
+        if congregacao_id:
+            congregacao = Congregacao.query.get(int(congregacao_id))
+            if congregacao:
+                filtros_texto.append(f"Congregação: {congregacao.nome}")
+        
+        if orador_id:
+            orador = Orador.query.get(int(orador_id))
+            if orador:
+                filtros_texto.append(f"Orador: {orador.nome}")
+        
+        if discurso_id:
+            discurso = Discurso.query.get(int(discurso_id))
+            if discurso:
+                filtros_texto.append(f"Discurso: #{discurso.numero} - {discurso.titulo}")
+        
+        if data_inicio:
+            filtros_texto.append(f"Data início: {data_inicio}")
+        
+        if data_fim:
+            filtros_texto.append(f"Data fim: {data_fim}")
+        
+        if filtros_texto:
+            filtros_para = Paragraph("<br/>".join(filtros_texto), styles['Normal'])
+            elements.append(filtros_para)
+            elements.append(Spacer(1, 10))
+        
+        # Informações gerais
+        info_text = f"Total de registros: {len(historico)} | Data de geração: {datetime.now().strftime('%d/%m/%Y às %H:%M')}"
+        elements.append(Paragraph(info_text, styles['Normal']))
+        elements.append(Spacer(1, 20))
+        
+        # Tabela de dados
+        data = [['Data', 'Discurso', 'Orador', 'Congregação', 'Observações']]
+        
+        for item in historico:
+            observacoes = item.observacoes if item.observacoes else '-'
+            # Limitar observações para não quebrar o layout
+            if len(observacoes) > 50:
+                observacoes = observacoes[:47] + '...'
+            
+            data.append([
+                item.data_realizacao.strftime('%d/%m/%Y'),
+                f"#{item.discurso.numero}",
+                item.orador.nome,
+                item.congregacao.nome,
+                observacoes
+            ])
+        
+        # Criar tabela
+        table = Table(data, colWidths=[60, 80, 100, 100, 150])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#34495e')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        elements.append(table)
+        elements.append(Spacer(1, 20))
+        
+        # Rodapé
+        elements.append(Paragraph(f"Relatório gerado por: {current_user.nome}", styles['Normal']))
+        elements.append(Paragraph("Sistema de Discursos Públicos", styles['Normal']))
+        
+        doc.build(elements)
+        buffer.seek(0)
+        
+        # Nome do arquivo com data e filtros
+        filename = f"historico_discursos_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+        
+        return Response(
+            buffer.getvalue(),
+            mimetype="application/pdf",
+            headers={"Content-Disposition": f"attachment;filename={filename}"}
+        )
+        
+    except Exception as e:
+        flash(f'Erro ao gerar PDF: {str(e)}', 'error')
+        return redirect(url_for('listar_historico'))
 
 # ROTAS PARA COORDENADOR DE DISCURSOS
 @app.route('/congregacoes/<int:id>/coordenador', methods=['GET', 'POST'])
@@ -1517,6 +1685,7 @@ def admin_discursos_aceitos():
                          discursos_aceitos=discursos_aceitos,
                          congregacoes=congregacoes,
                          oradores=oradores)
+
 # =============================================
 # ROTAS PARA CONFIRMAÇÃO DE DISCURSOS
 # =============================================
@@ -1790,3 +1959,4 @@ inicializar_banco()
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+[file content end]
