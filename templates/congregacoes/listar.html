@@ -1,45 +1,203 @@
-<!-- Na tabela, adicione esta coluna -->
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>Localidade</th>
-            <th>Status</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for congregacao in congregacoes %}
-        <tr>
-            <td>{{ congregacao.id }}</td>
-            <td>{{ congregacao.nome }}</td>
-            <td>{{ congregacao.localidade }}</td>
-            <td>
-                <span class="badge bg-{{ 'success' if congregacao.ativo else 'secondary' }}">
-                    {{ 'Ativa' if congregacao.ativo else 'Inativa' }}
-                </span>
-            </td>
-            <td>
-                <div class="btn-group btn-group-sm">
-                    <!-- Botão Editar -->
-                    <a href="{{ url_for('editar_congregacao', id=congregacao.id) }}" 
-                       class="btn btn-outline-primary">
-                        <i class="bi bi-pencil"></i> Editar
+{% extends "base.html" %}
+
+{% block title %}Congregações - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-building"></i> Congregações Cadastradas</h2>
+    <a href="{{ url_for('nova_congregacao') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nova Congregação
+    </a>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="status" class="form-label">Status:</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">Todas</option>
+                    <option value="ativas" {% if request.args.get('status') == 'ativas' %}selected{% endif %}>Ativas</option>
+                    <option value="inativas" {% if request.args.get('status') == 'inativas' %}selected{% endif %}>Inativas</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="localidade" class="form-label">Localidade:</label>
+                <input type="text" class="form-control" id="localidade" name="localidade" 
+                       value="{{ request.args.get('localidade', '') }}" placeholder="Filtrar por localidade...">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <div class="d-flex gap-2 w-100">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                    <a href="{{ url_for('listar_congregacoes') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i>
                     </a>
-                    
-                    <!-- Botão Excluir -->
-                    {% if congregacao.ativo %}
-                    <form method="POST" action="{{ url_for('excluir_congregacao', id=congregacao.id) }}" 
-                          class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir esta congregação?');">
-                        <button type="submit" class="btn btn-outline-danger">
-                            <i class="bi bi-trash"></i> Excluir
-                        </button>
-                    </form>
-                    {% endif %}
                 </div>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Estatísticas Rápidas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center py-3">
+                <h4 class="card-title">{{ congregacoes|length }}</h4>
+                <p class="card-text mb-0">Total</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center py-3">
+                <h4 class="card-title">{{ congregacoes|selectattr('ativo')|list|length }}</h4>
+                <p class="card-text mb-0">Ativas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-secondary">
+            <div class="card-body text-center py-3">
+                <h4 class="card-title">{{ congregacoes|rejectattr('ativo')|list|length }}</h4>
+                <p class="card-text mb-0">Inativas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center py-3">
+                <h4 class="card-title">{{ total_oradores }}</h4>
+                <p class="card-text mb-0">Oradores</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Congregações -->
+<div class="card">
+    <div class="card-body">
+        {% if congregacoes %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Localidade</th>
+                            <th>Oradores</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for congregacao in congregacoes %}
+                        <tr>
+                            <td><strong>#{{ congregacao.id }}</strong></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-building me-2 text-primary"></i>
+                                    <div>
+                                        <strong>{{ congregacao.nome }}</strong>
+                                        {% if congregacao.coordenador_atual %}
+                                            <br>
+                                            <small class="text-muted">
+                                                Coord: {{ congregacao.coordenador_atual.orador.nome }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <i class="bi bi-geo-alt me-1 text-muted"></i>
+                                {{ congregacao.localidade }}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">
+                                    {{ congregacao.oradores|selectattr('ativo')|list|length }} ativos
+                                </span>
+                            </td>
+                            <td>
+                                {% if congregacao.ativo %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Ativa
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-pause-circle"></i> Inativa
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="table-actions">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('editar_congregacao', id=congregacao.id) }}" 
+                                       class="btn btn-outline-primary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% if congregacao.ativo %}
+                                        <a href="{{ url_for('coordenador_congregacao', id=congregacao.id) }}" 
+                                           class="btn btn-outline-info" title="Coordenador">
+                                            <i class="bi bi-person-gear"></i>
+                                        </a>
+                                        <form action="{{ url_for('excluir_congregacao', id=congregacao.id) }}" 
+                                              method="POST" class="d-inline" 
+                                              onsubmit="return confirm('Tem certeza que deseja excluir a congregação {{ congregacao.nome }}?')">
+                                            <button type="submit" class="btn btn-outline-danger" title="Excluir">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <button class="btn btn-outline-secondary" disabled title="Congregação Inativa">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-building fs-1 text-muted"></i>
+                <h5 class="text-muted mt-3">Nenhuma congregação cadastrada</h5>
+                <p class="text-muted">
+                    {% if request.args.get('status') or request.args.get('localidade') %}
+                        Nenhum resultado encontrado para os filtros aplicados.
+                    {% else %}
+                        Comece cadastrando a primeira congregação.
+                    {% endif %}
+                </p>
+                <a href="{{ url_for('nova_congregacao') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Cadastrar Primeira Congregação
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Informações -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h6><i class="bi bi-info-circle"></i> Informações:</h6>
+        <div class="row">
+            <div class="col-md-4">
+                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Ativa</span>
+                <small class="text-muted"> - Congregação ativa no sistema</small>
+            </div>
+            <div class="col-md-4">
+                <span class="badge bg-secondary"><i class="bi bi-pause-circle"></i> Inativa</span>
+                <small class="text-muted"> - Congregação desativada</small>
+            </div>
+            <div class="col-md-4">
+                <span class="badge bg-primary">X ativos</span>
+                <small class="text-muted"> - Número de oradores ativos</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

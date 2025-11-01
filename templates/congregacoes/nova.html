@@ -7,33 +7,63 @@
     <div class="col-md-8 col-lg-6">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title mb-0">
-                    <i class="bi bi-house-add"></i> Nova Congregação
+                <h4 class="mb-0">
+                    <i class="bi bi-building"></i> Nova Congregação
                 </h4>
             </div>
             <div class="card-body">
+                <!-- Mensagens Flash -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
                 <form method="POST">
                     <div class="mb-3">
-                        <label for="nome" class="form-label">Nome da Congregação *</label>
+                        <label for="nome" class="form-label">
+                            <i class="bi bi-building me-1"></i>Nome da Congregação
+                        </label>
                         <input type="text" class="form-control" id="nome" name="nome" 
-                               placeholder="Ex: Congregação Central" required>
+                               placeholder="Digite o nome da congregação" required>
+                        <div class="form-text">Exemplo: Congregação Central, Congregação Norte, etc.</div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="localidade" class="form-label">Localidade *</label>
+                        <label for="localidade" class="form-label">
+                            <i class="bi bi-geo-alt me-1"></i>Localidade
+                        </label>
                         <input type="text" class="form-control" id="localidade" name="localidade" 
-                               placeholder="Ex: São Paulo, Centro" required>
+                               placeholder="Digite a localidade" required>
+                        <div class="form-text">Exemplo: São Paulo, Rio de Janeiro, Belo Horizonte</div>
                     </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ url_for('listar_congregacoes') }}" class="btn btn-secondary me-md-2">
-                            <i class="bi bi-arrow-left"></i> Cancelar
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('listar_congregacoes') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Salvar Congregação
+                            <i class="bi bi-check-lg"></i> Cadastrar Congregação
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Card de Ajuda -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle"></i> Informações Importantes:</h6>
+                <ul class="mb-0">
+                    <li>Após cadastrar a congregação, você poderá adicionar oradores e usuários</li>
+                    <li>É possível definir um coordenador de discursos para cada congregação</li>
+                    <li>Todas as congregações são criadas como ativas por padrão</li>
+                </ul>
             </div>
         </div>
     </div>

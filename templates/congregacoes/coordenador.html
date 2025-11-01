@@ -1,126 +1,168 @@
 {% extends "base.html" %}
 
-{% block title %}Coordenador de Discursos - {{ congregacao.nome }}{% endblock %}
+{% block title %}Coordenador de Discursos - Sistema de Discursos{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-person-gear"></i> Coordenador de Discursos</h2>
-    <a href="{{ url_for('listar_congregacoes') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Voltar para Congregações
-    </a>
-</div>
-
-<div class="row">
-    <div class="col-md-8">
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-house-door"></i> {{ congregacao.nome }}
-                </h5>
+                <h4 class="mb-0">
+                    <i class="bi bi-person-gear"></i> Coordenador de Discursos
+                </h4>
             </div>
             <div class="card-body">
+                <!-- Informações da Congregação -->
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-building"></i> {{ congregacao.nome }}
+                    </h6>
+                    <p class="mb-0">{{ congregacao.localidade }}</p>
+                </div>
+
+                <!-- Mensagens Flash -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
                 <!-- Coordenador Atual -->
                 {% if coordenador %}
-                <div class="alert alert-success">
-                    <h6><i class="bi bi-person-check"></i> Coordenador Atual</h6>
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Nome:</strong> {{ coordenador.orador.nome }}</p>
-                            <p class="mb-1"><strong>Telefone:</strong> {{ coordenador.telefone or 'Não informado' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Desde:</strong> {{ coordenador.data_inicio.strftime('%d/%m/%Y') }}</p>
-                            <p class="mb-0"><strong>Status:</strong> <span class="badge bg-success">Ativo</span></p>
+                <div class="card mb-4 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-person-check"></i> Coordenador Atual
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>{{ coordenador.orador.nome }}</h6>
+                                {% if coordenador.telefone %}
+                                    <p class="mb-1">
+                                        <i class="bi bi-telephone"></i> {{ coordenador.telefone }}
+                                    </p>
+                                {% endif %}
+                                <small class="text-muted">
+                                    Desde: {{ coordenador.data_inicio.strftime('%d/%m/%Y') }}
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge bg-success">Ativo</span>
+                            </div>
                         </div>
                     </div>
                 </div>
                 {% else %}
                 <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle"></i> 
+                    <i class="bi bi-exclamation-triangle"></i>
                     Nenhum coordenador definido para esta congregação.
                 </div>
                 {% endif %}
 
-                <!-- Formulário para Definir Coordenador -->
-                <h6 class="mt-4 mb-3">
-                    <i class="bi bi-pencil-square"></i> 
-                    {% if coordenador %}Alterar{% else %}Definir{% endif %} Coordenador
-                </h6>
-                
+                <!-- Formulário para Definir/Atualizar Coordenador -->
                 <form method="POST">
-                    <div class="row g-3">
-                        <!-- Orador -->
-                        <div class="col-md-6">
-                            <label for="orador_id" class="form-label">Orador *</label>
-                            <select class="form-select" id="orador_id" name="orador_id" required>
-                                <option value="">Selecione um orador</option>
-                                {% for orador in oradores %}
-                                    <option value="{{ orador.id }}" 
-                                            {% if coordenador and coordenador.orador_id == orador.id %}selected{% endif %}>
-                                        {{ orador.nome }}
-                                        {% if orador.telefone %} - {{ orador.telefone }}{% endif %}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                            <div class="form-text">Selecione o orador que será o coordenador</div>
-                        </div>
-
-                        <!-- Telefone -->
-                        <div class="col-md-6">
-                            <label for="telefone" class="form-label">Telefone para Contato</label>
-                            <input type="text" class="form-control" id="telefone" name="telefone" 
-                                   value="{{ coordenador.telefone if coordenador else '' }}" 
-                                   placeholder="(00) 00000-0000">
-                            <div class="form-text">Telefone do coordenador para contato</div>
+                    <div class="mb-3">
+                        <label for="orador_id" class="form-label">
+                            <i class="bi bi-person-badge"></i> Selecionar Orador
+                        </label>
+                        <select class="form-select" id="orador_id" name="orador_id" required>
+                            <option value="">Selecione um orador...</option>
+                            {% for orador in oradores %}
+                                <option value="{{ orador.id }}" 
+                                    {% if coordenador and coordenador.orador_id == orador.id %}selected{% endif %}>
+                                    {{ orador.nome }}
+                                    {% if orador.telefone %} - {{ orador.telefone }}{% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Selecione um orador para ser o coordenador de discursos
                         </div>
                     </div>
 
-                    <!-- Botões -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-save"></i> 
-                                    {% if coordenador %}Atualizar{% else %}Definir{% endif %} Coordenador
-                                </button>
-                                {% if coordenador %}
-                                <a href="{{ url_for('listar_congregacoes') }}" class="btn btn-secondary">
-                                    <i class="bi bi-x-circle"></i> Cancelar
-                                </a>
-                                {% endif %}
-                            </div>
+                    <div class="mb-3">
+                        <label for="telefone" class="form-label">
+                            <i class="bi bi-telephone"></i> Telefone para Contato
+                        </label>
+                        <input type="text" class="form-control" id="telefone" name="telefone" 
+                               placeholder="(11) 99999-9999"
+                               value="{{ coordenador.telefone if coordenador }}">
+                        <div class="form-text">
+                            Telefone do coordenador para contato sobre discursos
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('listar_congregacoes') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <div class="d-flex gap-2">
+                            {% if coordenador %}
+                            <a href="{{ url_for('editar_congregacao', id=congregacao.id) }}" 
+                               class="btn btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Editar Congregação
+                            </a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-person-check"></i> 
+                                {{ 'Atualizar' if coordenador else 'Definir' }} Coordenador
+                            </button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
-    </div>
 
-    <!-- Informações da Congregação -->
-    <div class="col-md-4">
-        <div class="card">
+        <!-- Lista de Oradores Disponíveis -->
+        <div class="card mt-4">
             <div class="card-header">
-                <h6 class="card-title mb-0">
-                    <i class="bi bi-info-circle"></i> Informações da Congregação
+                <h6 class="mb-0">
+                    <i class="bi bi-people"></i> Oradores da Congregação
                 </h6>
             </div>
             <div class="card-body">
-                <p class="mb-2"><strong>Nome:</strong> {{ congregacao.nome }}</p>
-                <p class="mb-2"><strong>Localidade:</strong> {{ congregacao.localidade }}</p>
-                <p class="mb-2"><strong>Oradores Ativos:</strong> {{ oradores|length }}</p>
-                <p class="mb-0"><strong>Status:</strong> 
-                    <span class="badge bg-success">Ativa</span>
-                </p>
-
-                <hr>
-
-                <h6>Funções do Coordenador:</h6>
-                <ul class="small mb-0">
-                    <li>Organizar a escala de discursos</li>
-                    <li>Comunicar-se com os oradores</li>
-                    <li>Acompanhar discursos agendados</li>
-                    <li>Coordenar eventos especiais</li>
-                </ul>
+                {% if oradores %}
+                <div class="list-group">
+                    {% for orador in oradores %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ orador.nome }}</h6>
+                            {% if orador.telefone %}
+                                <small class="text-muted">
+                                    <i class="bi bi-telephone"></i> {{ orador.telefone }}
+                                </small>
+                            {% endif %}
+                            {% if orador.email %}
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-envelope"></i> {{ orador.email }}
+                                </small>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if orador.anfitriao %}
+                                <span class="badge bg-info me-1">Anfitrião</span>
+                            {% endif %}
+                            <span class="badge bg-{{ 'success' if orador.aprovado else 'warning' }}">
+                                {{ 'Aprovado' if orador.aprovado else 'Pendente' }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="bi bi-people fs-1"></i>
+                    <p class="mt-2 mb-0">Nenhum orador cadastrado nesta congregação</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
