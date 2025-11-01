@@ -1196,9 +1196,12 @@ def coordenador_congregacao(id):
                          coordenador=coordenador_atual,
                          oradores=oradores)
 
-# ROTAS PARA ORADOR ACEITAR DISCURSOS
+# =============================================
+# ROTAS PARA ORADOR ACEITAR DISCURSOS (NOMES ÚNICOS)
+# =============================================
+
 @app.route('/orador/<int:orador_id>/aceitar-discursos')
-def orador_aceitar_discursos(orador_id):
+def aceitar_discursos_orador(orador_id):  # NOME ÚNICO
     orador = Orador.query.get_or_404(orador_id)
     
     # Buscar todos os discursos
@@ -1214,7 +1217,7 @@ def orador_aceitar_discursos(orador_id):
                          discursos_aceitos=discursos_aceitos)
 
 @app.route('/orador/<int:orador_id>/aceitar-discurso/<int:discurso_id>', methods=['POST'])
-def aceitar_discurso(orador_id, discurso_id):
+def aceitar_discurso_orador(orador_id, discurso_id):  # NOME ÚNICO
     orador = Orador.query.get_or_404(orador_id)
     discurso = Discurso.query.get_or_404(discurso_id)
     
@@ -1238,10 +1241,10 @@ def aceitar_discurso(orador_id, discurso_id):
     
     db.session.commit()
     flash(f'Discurso #{discurso.numero} aceito com sucesso!', 'success')
-    return redirect(url_for('orador_aceitar_discursos', orador_id=orador_id))
+    return redirect(url_for('aceitar_discursos_orador', orador_id=orador_id))
 
 @app.route('/orador/<int:orador_id>/remover-discurso/<int:discurso_id>', methods=['POST'])
-def remover_discurso(orador_id, discurso_id):
+def remover_discurso_orador(orador_id, discurso_id):  # NOME ÚNICO
     orador_discurso = OradorDiscurso.query.filter_by(
         orador_id=orador_id,
         discurso_id=discurso_id
@@ -1253,10 +1256,10 @@ def remover_discurso(orador_id, discurso_id):
     db.session.commit()
     
     flash(f'Discurso {discurso_info} removido da sua lista!', 'success')
-    return redirect(url_for('orador_aceitar_discursos', orador_id=orador_id))
+    return redirect(url_for('aceitar_discursos_orador', orador_id=orador_id))
 
 @app.route('/orador/<int:orador_id>/discursos-preparados')
-def orador_discursos_preparados(orador_id):
+def discursos_preparados_orador(orador_id):  # NOME ÚNICO
     orador = Orador.query.get_or_404(orador_id)
     
     discursos_preparados = OradorDiscurso.query.filter_by(
@@ -1531,80 +1534,7 @@ def inicializar_banco():
 
 # Executa a inicialização quando o app startar
 inicializar_banco()
-# =============================================
-# ROTAS PARA ORADOR ACEITAR DISCURSOS
-# =============================================
 
-@app.route('/orador/<int:orador_id>/aceitar-discursos')
-def orador_aceitar_discursos(orador_id):
-    orador = Orador.query.get_or_404(orador_id)
-    
-    # Buscar todos os discursos
-    todos_discursos = Discurso.query.order_by(Discurso.numero).all()
-    
-    # Buscar discursos que o orador já aceitou/preparou
-    discursos_orador = OradorDiscurso.query.filter_by(orador_id=orador_id).all()
-    discursos_aceitos = {do.discurso_id: do for do in discursos_orador}
-    
-    return render_template('orador/aceitar_discursos.html',
-                         orador=orador,
-                         todos_discursos=todos_discursos,
-                         discursos_aceitos=discursos_aceitos)
-
-@app.route('/orador/<int:orador_id>/aceitar-discurso/<int:discurso_id>', methods=['POST'])
-def aceitar_discurso(orador_id, discurso_id):
-    orador = Orador.query.get_or_404(orador_id)
-    discurso = Discurso.query.get_or_404(discurso_id)
-    
-    # Verificar se já existe registro
-    orador_discurso = OradorDiscurso.query.filter_by(
-        orador_id=orador_id,
-        discurso_id=discurso_id
-    ).first()
-    
-    if orador_discurso:
-        orador_discurso.aceito = True
-        orador_discurso.data_aceitacao = datetime.utcnow()
-    else:
-        orador_discurso = OradorDiscurso(
-            orador_id=orador_id,
-            discurso_id=discurso_id,
-            aceito=True,
-            data_aceitacao=datetime.utcnow()
-        )
-        db.session.add(orador_discurso)
-    
-    db.session.commit()
-    flash(f'Discurso #{discurso.numero} aceito com sucesso!', 'success')
-    return redirect(url_for('orador_aceitar_discursos', orador_id=orador_id))
-
-@app.route('/orador/<int:orador_id>/remover-discurso/<int:discurso_id>', methods=['POST'])
-def remover_discurso(orador_id, discurso_id):
-    orador_discurso = OradorDiscurso.query.filter_by(
-        orador_id=orador_id,
-        discurso_id=discurso_id
-    ).first_or_404()
-    
-    discurso_info = f"#{orador_discurso.discurso.numero}"
-    
-    db.session.delete(orador_discurso)
-    db.session.commit()
-    
-    flash(f'Discurso {discurso_info} removido da sua lista!', 'success')
-    return redirect(url_for('orador_aceitar_discursos', orador_id=orador_id))
-
-@app.route('/orador/<int:orador_id>/discursos-preparados')
-def orador_discursos_preparados(orador_id):
-    orador = Orador.query.get_or_404(orador_id)
-    
-    discursos_preparados = OradorDiscurso.query.filter_by(
-        orador_id=orador_id,
-        aceito=True
-    ).order_by(OradorDiscurso.data_aceitacao.desc()).all()
-    
-    return render_template('orador/discursos_preparados.html',
-                         orador=orador,
-                         discursos_preparados=discursos_preparados)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
