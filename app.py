@@ -173,232 +173,251 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 def criar_dados_iniciais():
-    if not Congregacao.query.first():
-        congregacao = Congregacao(nome="Congregação Central", localidade="São Paulo")
-        db.session.add(congregacao)
-        db.session.commit()
+    """Cria apenas os dados que não existem"""
+    try:
+        # Verifica se já existe congregação
+        if not Congregacao.query.first():
+            congregacao = Congregacao(nome="Congregação Central", localidade="São Paulo")
+            db.session.add(congregacao)
+            db.session.commit()
+            print("✅ Congregação padrão criada")
+        else:
+            congregacao = Congregacao.query.first()
         
-        # Criar usuário admin padrão
-        admin = User(
-            username="admin",
-            password=generate_password_hash("admin123"),
-            nome="Administrador Principal",
-            congregacao_id=congregacao.id
-        )
-        db.session.add(admin)
+        # Verifica se já existe usuário admin
+        if not User.query.filter_by(username="admin").first():
+            admin = User(
+                username="admin",
+                password=generate_password_hash("admin123"),
+                nome="Administrador Principal",
+                congregacao_id=congregacao.id
+            )
+            db.session.add(admin)
+            print("✅ Usuário admin criado")
         
-        # Criar TODOS os 194 discursos
-        todos_discursos = [
-            (1, "Você conhece bem a Deus?", "Conhecimento de Deus"),
-            (2, "Você vai sobreviver aos últimos dias?", "Sobrevivência"),
-            (3, "Você está avançando com a organização unida de Jeová?", "Organização"),
-            (4, "Que provas temos de que Deus existe?", "Existência de Deus"),
-            (5, "Você pode ter uma família feliz!", "Família"),
-            (6, "O Dilúvio dos dias de Noé e você", "Dilúvio"),
-            (7, "Imite a misericórdia de Jeová", "Misericórdia"),
-            (8, "Viva para fazer a vontade de Deus", "Vontade de Deus"),
-            (9, "Escute e faça o que a Bíblia diz", "Obediência"),
-            (10, "Seja honesto em tudo", "Honestidade"),
-            (11, "Imite a Jesus e não faça parte do mundo", "Imitação de Cristo"),
-            (12, "Deus quer que você respeite quem tem autoridade", "Autoridade"),
-            (13, "Qual o ponto de vista de Deus sobre o sexo e o casamento?", "Casamento"),
-            (14, "Um povo puro e limpo honra a Jeová", "Pureza"),
-            (15, "'Faça o bem a todos'", "Bondade"),
-            (16, "Seja cada vez mais amigo de Jeová", "Amizade com Deus"),
-            (17, "Glorifique a Deus com tudo o que você tem", "Glorificação"),
-            (18, "Faça de Jeová a sua fortaleza", "Fortaleza"),
-            (19, "Como você pode saber seu futuro?", "Futuro"),
-            (20, "Chegou o tempo de Deus governar o mundo?", "Governo de Deus"),
-            (21, "Dê valor ao seu lugar no Reino de Deus", "Reino de Deus"),
-            (22, "Você está usando bem o que Jeová lhe dá?", "Mordomia"),
-            (23, "A vida tem objetivo", "Objetivo da Vida"),
-            (24, "Você encontrou 'uma pérola de grande valor'?", "Valor Espiritual"),
-            (25, "Lute contra o espírito do mundo", "Luta Espiritual"),
-            (26, "Você é importante para Deus?", "Importância para Deus"),
-            (27, "Como construir um casamento feliz", "Casamento Feliz"),
-            (28, "Mostre respeito e amor no seu casamento", "Respeito no Casamento"),
-            (29, "As responsabilidades e recompensas de ter filhos", "Paternidade"),
-            (30, "Como melhorar a comunicação na família", "Comunicação Familiar"),
-            (31, "Você tem consciência da sua necessidade espiritual?", "Necessidade Espiritual"),
-            (32, "Como lidar com as ansiedades da vida", "Ansiedades"),
-            (33, "Quando vai existir verdadeira justiça?", "Justiça"),
-            (34, "Você vai ser marcado para sobreviver?", "Sobrevivência"),
-            (35, "É possível viver para sempre? O que você precisa fazer?", "Vida Eterna"),
-            (36, "Será que a vida é só isso?", "Sentido da Vida"),
-            (37, "Obedecer a Deus é mesmo a melhor coisa a fazer?", "Obediência a Deus"),
-            (38, "Como você pode sobreviver ao fim do mundo?", "Fim do Mundo"),
-            (39, "Jesus Cristo vence o mundo — Como e quando?", "Vitória de Cristo"),
-            (40, "O que vai acontecer em breve?", "Eventos Futuros"),
-            (41, "Fiquem parados e vejam como Jeová os salvará", "Salvação"),
-            (42, "O amor pode vencer o ódio?", "Amor vs Ódio"),
-            (43, "Tudo o que Deus nos pede é para o nosso bem", "Bem-estar"),
-            (44, "Como os ensinos de Jesus podem ajudar você?", "Ensinos de Jesus"),
-            (45, "Continue andando no caminho que leva à vida", "Caminho da Vida"),
-            (46, "Fortaleça sua confiança em Jeová", "Confiança"),
-            (47, "Discurso Reservado", "Tema Reservado"),
-            (48, "Seja leal a Deus mesmo quando for testado", "Lealdade"),
-            (49, "Será que um dia a Terra vai ser limpa?", "Terra Limpa"),
-            (50, "Como sempre tomar as melhores decisões", "Decisões"),
-            (51, "Será que a verdade da Bíblia está mudando a sua vida?", "Verdade Bíblica"),
-            (52, "Quem é o seu Deus?", "Deus Verdadeiro"),
-            (53, "Você pensa como Deus?", "Pensamento Divino"),
-            (54, "Fortaleça sua fé em Deus e em suas promessas", "Fé"),
-            (55, "Você está fazendo um bom nome perante Deus?", "Reputação"),
-            (56, "Existe um líder em quem você pode confiar?", "Liderança"),
-            (57, "Como suportar perseguição", "Perseguição"),
-            (58, "Quem são os verdadeiros seguidores de Cristo?", "Seguidores de Cristo"),
-            (59, "Discurso Reservado", "Tema Reservado"),
-            (60, "Você tem um objetivo na vida?", "Objetivo"),
-            (61, "Nas promessas de quem você confia?", "Promessas"),
-            (62, "Onde encontrar uma esperança real para o futuro?", "Esperança"),
-            (63, "Tem você espírito evangelizador?", "Evangelização"),
-            (64, "Você ama os prazeres ou a Deus?", "Amor a Deus"),
-            (65, "Como podemos ser pacíficos num mundo cheio de ódio", "Paz"),
-            (66, "Você também vai participar na colheita?", "Colheita"),
-            (67, "Medite na Bíblia e nas criações de Jeová", "Meditação"),
-            (68, "'Continuem a perdoar uns aos outros liberalmente'", "Perdão"),
-            (69, "Por que mostrar amor abnegado?", "Amor Abnegado"),
-            (70, "Por que Deus merece sua confiança?", "Confiança em Deus"),
-            (71, "'Mantenha-se desperto' — Por que e como?", "Vigilância"),
-            (72, "O amor identifica os cristãos verdadeiros", "Amor Cristão"),
-            (73, "Você tem 'um coração sábio?'", "Sabedoria"),
-            (74, "Os olhos de Jeová estão em todo lugar", "Onisciência"),
-            (75, "Mostre que você apoia o direito de Jeová governar", "Governo Divino"),
-            (76, "Princípios bíblicos — Podem nos ajudar a lidar com os problemas atuais?", "Princípios Bíblicos"),
-            (77, "'Sempre mostrem hospitalidade'", "Hospitalidade"),
-            (78, "Sirva a Jeová com um coração alegre", "Serviço Alegre"),
-            (79, "Você vai escolher ser amigo de Deus?", "Amizade com Deus"),
-            (80, "Você baseia a sua esperança na ciência ou na Bíblia?", "Ciência vs Bíblia"),
-            (81, "Quem está qualificado para fazer discípulos?", "Discipulado"),
-            (82, "Discurso Reservado", "Tema Reservado"),
-            (83, "Será que os cristãos precisam obedecer aos Dez Mandamentos?", "Dez Mandamentos"),
-            (84, "Escapará do destino deste mundo?", "Destino Mundial"),
-            (85, "Boas notícias num mundo violento", "Boas Notícias"),
-            (86, "Como orar a Deus e ser ouvido por ele?", "Oração"),
-            (87, "Qual é a sua relação com Deus?", "Relação com Deus"),
-            (88, "Por que viver de acordo com os padrões da Bíblia?", "Padrões Bíblicos"),
-            (89, "Quem tem sede da verdade, venha!", "Verdade"),
-            (90, "Faça o máximo para alcançar a verdadeira vida!", "Vida Verdadeira"),
-            (91, "A presença do Messias e seu domínio", "Messias"),
-            (92, "O papel da religião nos assuntos do mundo", "Religião"),
-            (93, "Desastres naturais — Quando vão acabar?", "Desastres Naturais"),
-            (94, "A religião verdadeira atende às necessidades da sociedade humana", "Religião Verdadeira"),
-            (95, "Não seja enganado pelo ocultismo!", "Ocultismo"),
-            (96, "O que vai acontecer com as religiões?", "Futuro das Religiões"),
-            (97, "Permaneçamos inculpes em meio a uma geração pervertida", "Inculpabilidade"),
-            (98, "'A cena deste mundo está mudando'", "Mudança Mundial"),
-            (99, "Por que podemos confiar no que a Bíblia diz?", "Confiança na Bíblia"),
-            (100, "Como fazer amizades fortes e verdadeiras", "Amizades"),
-            (101, "Jeová é o 'Grandioso Criador'", "Criação"),
-            (102, "Preste atenção à 'palavra profética'", "Profecia"),
-            (103, "Como você pode ter a verdadeira alegria?", "Alegria"),
-            (104, "Pais, vocês estão construindo com materiais à prova de fogo?", "Paternidade Cristã"),
-            (105, "Somos consolados em todas as nossas tribulações", "Consolo"),
-            (106, "Arruinar a Terra provocará retribuição divina", "Cuidado da Terra"),
-            (107, "Você está treinando bem a sua consciência?", "Consciência"),
-            (108, "Você pode encarar o futuro com confiança!", "Confiança no Futuro"),
-            (109, "O Reino de Deus está próximo", "Reino Próximo"),
-            (110, "Deus vem primeiro na vida familiar bem-sucedida", "Deus em Primeiro"),
-            (111, "É possível que a humanidade seja completamente curada?", "Cura"),
-            (112, "Discurso Reservado", "Tema Reservado"),
-            (113, "Jovens — Como vocês podem ter uma vida feliz?", "Juventude"),
-            (114, "Aprecio pelas maravilhas da criação de Deus", "Maravilhas da Criação"),
-            (115, "Não caia nas armadilhas de Satanás", "Armadilhas de Satanás"),
-            (116, "Escolha sabiamente com quem irá associar-se!", "Associações"),
-            (117, "Como vencer o mal com o bem", "Bem vs Mal"),
-            (118, "Olhemos os jovens do ponto de vista de Jeová", "Juventude e Deus"),
-            (119, "Por que é benéfico que os cristãos vivam separados do mundo", "Separação do Mundo"),
-            (120, "Por que se submeter à regência de Deus agora", "Submissão a Deus"),
-            (121, "Uma família mundial que será salva da destruição", "Família Mundial"),
-            (122, "Discurso Reservado", "Tema Reservado"),
-            (123, "Discurso Reservado", "Tema Reservado"),
-            (124, "Razões para crer que a Bíblia é de autoria divina", "Autoria Divina"),
-            (125, "Por que a humanidade precisa de resgate", "Resgate"),
-            (126, "Quem se salvará?", "Salvação"),
-            (127, "O que acontece quando morremos?", "Morte"),
-            (128, "É o inferno um lugar de tormento ardente?", "Inferno"),
-            (129, "O que a Bíblia diz sobre a Trindade?", "Trindade"),
-            (130, "A Terra permanecerá para sempre", "Terra Eterna"),
-            (131, "Discurso Reservado", "Tema Reservado"),
-            (132, "Ressurreição — A vitória sobre a morte!", "Ressurreição"),
-            (133, "Tem importância o que cremos sobre a nossa origem?", "Origem"),
-            (134, "Será que os cristãos precisam guardar o sábado?", "Sábado"),
-            (135, "A santidade da vida e do sangue", "Santidade da Vida"),
-            (136, "Será que Deus aprova o uso de imagens na adoração?", "Imagens"),
-            (137, "Ocorreram realmente os milagres da Bíblia?", "Milagres"),
-            (138, "Viva com bom juízo num mundo depravado", "Bom Juízo"),
-            (139, "Sabedoria divina num mundo científico", "Sabedoria Divina"),
-            (140, "Quem é realmente Jesus Cristo?", "Jesus Cristo"),
-            (141, "Quando terão fim os gemidos da criação humana?", "Gemidos da Criação"),
-            (142, "Por que refugiar-se em Jeová", "Refúgio em Deus"),
-            (143, "Confie no Deus de todo consolo", "Deus de Consolo"),
-            (144, "Uma congregação leal sob a liderança de Cristo", "Congregação Leal"),
-            (145, "Quem é semelhante a Jeová, nosso Deus?", "Unicidade de Deus"),
-            (146, "Use a educação para louvar a Jeová", "Educação"),
-            (147, "Confie que Jeová tem o poder para nos salvar", "Poder de Deus"),
-            (148, "Você tem o mesmo conceito de Deus sobre a vida?", "Conceito de Vida"),
-            (149, "O que significa 'andar com Deus'?", "Andar com Deus"),
-            (150, "Este mundo está condenado à destruição?", "Destruição Mundial"),
-            (151, "Jeová é 'uma altura protetora' para seu povo", "Proteção Divina"),
-            (152, "Armagedom — Por que e quando?", "Armagedom"),
-            (153, "Tenha bem em mente o 'atemorizante dia'!", "Dia do Juízo"),
-            (154, "O governo humano é pesado na balança", "Governo Humano"),
-            (155, "Chegou a hora do julgamento de Babilônia?", "Julgamento de Babilônia"),
-            (156, "O Dia do Juízo — Tempo de temor ou de esperança?", "Dia do Juízo"),
-            (157, "Como os verdadeiros cristãos adornam o ensino divino", "Ensino Divino"),
-            (158, "Seja corajoso e confie em Jeová", "Coragem"),
-            (159, "Como encontrar segurança num mundo perigoso", "Segurança"),
-            (160, "Mantenha a identidade cristã!", "Identidade Cristã"),
-            (161, "Por que Jesus sofreu e morreu?", "Morte de Jesus"),
-            (162, "Seja liberto deste mundo em escuridão", "Libertação"),
-            (163, "Por que temer o Deus verdadeiro?", "Temor a Deus"),
-            (164, "Será que Deus ainda está no controle?", "Controle Divino"),
-            (165, "Os valores de quem você preza?", "Valores"),
-            (166, "Verdadeira fé — O que é e como mostrar", "Fé Verdadeira"),
-            (167, "Ajamos sabiamente num mundo insensato", "Sabedoria Prática"),
-            (168, "Você pode sentir-se seguro neste mundo atribulado!", "Segurança"),
-            (169, "Por que ser orientado pela Bíblia?", "Orientação Bíblica"),
-            (170, "Quem está qualificado para governar a humanidade?", "Governo"),
-            (171, "Poderá viver em paz agora — E para sempre!", "Paz Eterna"),
-            (172, "Que reputação você tem perante Deus?", "Reputação"),
-            (173, "Existe uma religião verdadeira do ponto de vista de Deus?", "Religião Verdadeira"),
-            (174, "Quem se qualificará para entrar no novo mundo de Deus?", "Novo Mundo"),
-            (175, "O que prova que a Bíblia é autêntica?", "Autenticidade Bíblica"),
-            (176, "Quando haverá verdadeira paz e segurança?", "Paz e Segurança"),
-            (177, "Onde encontrar ajuda em tempos de aflição?", "Ajuda Divina"),
-            (178, "Ande no caminho da integridade", "Integridade"),
-            (179, "Rejeite as fantasias do mundo, empenhe-se pelas realidades do Reino", "Realidades do Reino"),
-            (180, "A ressurreição — Por que essa esperança deve ser real para você", "Esperança da Ressurreição"),
-            (181, "Já é mais tarde do que você imagina?", "Tempo"),
-            (182, "O que o Reino de Deus está fazendo por nós agora?", "Reino de Deus"),
-            (183, "Desvie seus olhos do que é fútil!", "Futilidade"),
-            (184, "A morte é o fim de tudo?", "Morte"),
-            (185, "Será que a verdade influencia sua vida?", "Influência da Verdade"),
-            (186, "Sirva em união com o povo feliz de Deus", "União"),
-            (187, "Por que um Deus amoroso permite a maldade?", "Problema do Mal"),
-            (188, "Você confia em Jeová?", "Confiança"),
-            (189, "Ande com Deus e receba bênçãos para sempre", "Bênçãos"),
-            (190, "Como se cumprirá a promessa de perfeita felicidade familiar", "Felicidade Familiar"),
-            (191, "Como o amor e a fé vencem o mundo", "Amor e Fé"),
-            (192, "Você está no caminho para a vida eterna?", "Caminho da Vida"),
-            (193, "Os problemas de hoje logo serão coisa do passado", "Problemas Temporários"),
-            (194, "Como a sabedoria de Deus nos ajuda", "Sabedoria de Deus")
-        ]
-        
-        for numero, titulo, tema in todos_discursos:
-            discurso_existente = Discurso.query.filter_by(numero=numero).first()
-            if not discurso_existente:
-                discurso = Discurso(
-                    numero=numero,
-                    titulo=titulo,
-                    tema=tema,
-                    descricao=f"Discurso público #{numero}",
-                    duracao=30,
-                    bloqueado=False
-                )
-                db.session.add(discurso)
-    
-    db.session.commit()
+        # Verifica discursos
+        discursos_existentes = Discurso.query.count()
+        if discursos_existentes < 194:
+            print(f"🔧 Criando discursos faltantes... ({discursos_existentes}/194)")
+            
+            todos_discursos = [
+                (1, "Você conhece bem a Deus?", "Conhecimento de Deus"),
+                (2, "Você vai sobreviver aos últimos dias?", "Sobrevivência"),
+                (3, "Você está avançando com a organização unida de Jeová?", "Organização"),
+                (4, "Que provas temos de que Deus existe?", "Existência de Deus"),
+                (5, "Você pode ter uma família feliz!", "Família"),
+                (6, "O Dilúvio dos dias de Noé e você", "Dilúvio"),
+                (7, "Imite a misericórdia de Jeová", "Misericórdia"),
+                (8, "Viva para fazer a vontade de Deus", "Vontade de Deus"),
+                (9, "Escute e faça o que a Bíblia diz", "Obediência"),
+                (10, "Seja honesto em tudo", "Honestidade"),
+                (11, "Imite a Jesus e não faça parte do mundo", "Imitação de Cristo"),
+                (12, "Deus quer que você respeite quem tem autoridade", "Autoridade"),
+                (13, "Qual o ponto de vista de Deus sobre o sexo e o casamento?", "Casamento"),
+                (14, "Um povo puro e limpo honra a Jeová", "Pureza"),
+                (15, "'Faça o bem a todos'", "Bondade"),
+                (16, "Seja cada vez mais amigo de Jeová", "Amizade com Deus"),
+                (17, "Glorifique a Deus com tudo o que você tem", "Glorificação"),
+                (18, "Faça de Jeová a sua fortaleza", "Fortaleza"),
+                (19, "Como você pode saber seu futuro?", "Futuro"),
+                (20, "Chegou o tempo de Deus governar o mundo?", "Governo de Deus"),
+                (21, "Dê valor ao seu lugar no Reino de Deus", "Reino de Deus"),
+                (22, "Você está usando bem o que Jeová lhe dá?", "Mordomia"),
+                (23, "A vida tem objetivo", "Objetivo da Vida"),
+                (24, "Você encontrou 'uma pérola de grande valor'?", "Valor Espiritual"),
+                (25, "Lute contra o espírito do mundo", "Luta Espiritual"),
+                (26, "Você é importante para Deus?", "Importância para Deus"),
+                (27, "Como construir um casamento feliz", "Casamento Feliz"),
+                (28, "Mostre respeito e amor no seu casamento", "Respeito no Casamento"),
+                (29, "As responsabilidades e recompensas de ter filhos", "Paternidade"),
+                (30, "Como melhorar a comunicação na família", "Comunicação Familiar"),
+                (31, "Você tem consciência da sua necessidade espiritual?", "Necessidade Espiritual"),
+                (32, "Como lidar com as ansiedades da vida", "Ansiedades"),
+                (33, "Quando vai existir verdadeira justiça?", "Justiça"),
+                (34, "Você vai ser marcado para sobreviver?", "Sobrevivência"),
+                (35, "É possível viver para sempre? O que você precisa fazer?", "Vida Eterna"),
+                (36, "Será que a vida é só isso?", "Sentido da Vida"),
+                (37, "Obedecer a Deus é mesmo a melhor coisa a fazer?", "Obediência a Deus"),
+                (38, "Como você pode sobreviver ao fim do mundo?", "Fim do Mundo"),
+                (39, "Jesus Cristo vence o mundo — Como e quando?", "Vitória de Cristo"),
+                (40, "O que vai acontecer em breve?", "Eventos Futuros"),
+                (41, "Fiquem parados e vejam como Jeová os salvará", "Salvação"),
+                (42, "O amor pode vencer o ódio?", "Amor vs Ódio"),
+                (43, "Tudo o que Deus nos pede é para o nosso bem", "Bem-estar"),
+                (44, "Como os ensinos de Jesus podem ajudar você?", "Ensinos de Jesus"),
+                (45, "Continue andando no caminho que leva à vida", "Caminho da Vida"),
+                (46, "Fortaleça sua confiança em Jeová", "Confiança"),
+                (47, "Discurso Reservado", "Tema Reservado"),
+                (48, "Seja leal a Deus mesmo quando for testado", "Lealdade"),
+                (49, "Será que um dia a Terra vai ser limpa?", "Terra Limpa"),
+                (50, "Como sempre tomar as melhores decisões", "Decisões"),
+                (51, "Será que a verdade da Bíblia está mudando a sua vida?", "Verdade Bíblica"),
+                (52, "Quem é o seu Deus?", "Deus Verdadeiro"),
+                (53, "Você pensa como Deus?", "Pensamento Divino"),
+                (54, "Fortaleça sua fé em Deus e em suas promessas", "Fé"),
+                (55, "Você está fazendo um bom nome perante Deus?", "Reputação"),
+                (56, "Existe um líder em quem você pode confiar?", "Liderança"),
+                (57, "Como suportar perseguição", "Perseguição"),
+                (58, "Quem são os verdadeiros seguidores de Cristo?", "Seguidores de Cristo"),
+                (59, "Discurso Reservado", "Tema Reservado"),
+                (60, "Você tem um objetivo na vida?", "Objetivo"),
+                (61, "Nas promessas de quem você confia?", "Promessas"),
+                (62, "Onde encontrar uma esperança real para o futuro?", "Esperança"),
+                (63, "Tem você espírito evangelizador?", "Evangelização"),
+                (64, "Você ama os prazeres ou a Deus?", "Amor a Deus"),
+                (65, "Como podemos ser pacíficos num mundo cheio de ódio", "Paz"),
+                (66, "Você também vai participar na colheita?", "Colheita"),
+                (67, "Medite na Bíblia e nas criações de Jeová", "Meditação"),
+                (68, "'Continuem a perdoar uns aos outros liberalmente'", "Perdão"),
+                (69, "Por que mostrar amor abnegado?", "Amor Abnegado"),
+                (70, "Por que Deus merece sua confiança?", "Confiança em Deus"),
+                (71, "'Mantenha-se desperto' — Por que e como?", "Vigilância"),
+                (72, "O amor identifica os cristãos verdadeiros", "Amor Cristão"),
+                (73, "Você tem 'um coração sábio?'", "Sabedoria"),
+                (74, "Os olhos de Jeová estão em todo lugar", "Onisciência"),
+                (75, "Mostre que você apoia o direito de Jeová governar", "Governo Divino"),
+                (76, "Princípios bíblicos — Podem nos ajudar a lidar com os problemas atuais?", "Princípios Bíblicos"),
+                (77, "'Sempre mostrem hospitalidade'", "Hospitalidade"),
+                (78, "Sirva a Jeová com um coração alegre", "Serviço Alegre"),
+                (79, "Você vai escolher ser amigo de Deus?", "Amizade com Deus"),
+                (80, "Você baseia a sua esperança na ciência ou na Bíblia?", "Ciência vs Bíblia"),
+                (81, "Quem está qualificado para fazer discípulos?", "Discipulado"),
+                (82, "Discurso Reservado", "Tema Reservado"),
+                (83, "Será que os cristãos precisam obedecer aos Dez Mandamentos?", "Dez Mandamentos"),
+                (84, "Escapará do destino deste mundo?", "Destino Mundial"),
+                (85, "Boas notícias num mundo violento", "Boas Notícias"),
+                (86, "Como orar a Deus e ser ouvido por ele?", "Oração"),
+                (87, "Qual é a sua relação com Deus?", "Relação com Deus"),
+                (88, "Por que viver de acordo com os padrões da Bíblia?", "Padrões Bíblicos"),
+                (89, "Quem tem sede da verdade, venha!", "Verdade"),
+                (90, "Faça o máximo para alcançar a verdadeira vida!", "Vida Verdadeira"),
+                (91, "A presença do Messias e seu domínio", "Messias"),
+                (92, "O papel da religião nos assuntos do mundo", "Religião"),
+                (93, "Desastres naturais — Quando vão acabar?", "Desastres Naturais"),
+                (94, "A religião verdadeira atende às necessidades da sociedade humana", "Religião Verdadeira"),
+                (95, "Não seja enganado pelo ocultismo!", "Ocultismo"),
+                (96, "O que vai acontecer com as religiões?", "Futuro das Religiões"),
+                (97, "Permaneçamos inculpes em meio a uma geração pervertida", "Inculpabilidade"),
+                (98, "'A cena deste mundo está mudando'", "Mudança Mundial"),
+                (99, "Por que podemos confiar no que a Bíblia diz?", "Confiança na Bíblia"),
+                (100, "Como fazer amizades fortes e verdadeiras", "Amizades"),
+                (101, "Jeová é o 'Grandioso Criador'", "Criação"),
+                (102, "Preste atenção à 'palavra profética'", "Profecia"),
+                (103, "Como você pode ter a verdadeira alegria?", "Alegria"),
+                (104, "Pais, vocês estão construindo com materiais à prova de fogo?", "Paternidade Cristã"),
+                (105, "Somos consolados em todas as nossas tribulações", "Consolo"),
+                (106, "Arruinar a Terra provocará retribuição divina", "Cuidado da Terra"),
+                (107, "Você está treinando bem a sua consciência?", "Consciência"),
+                (108, "Você pode encarar o futuro com confiança!", "Confiança no Futuro"),
+                (109, "O Reino de Deus está próximo", "Reino Próximo"),
+                (110, "Deus vem primeiro na vida familiar bem-sucedida", "Deus em Primeiro"),
+                (111, "É possível que a humanidade seja completamente curada?", "Cura"),
+                (112, "Discurso Reservado", "Tema Reservado"),
+                (113, "Jovens — Como vocês podem ter uma vida feliz?", "Juventude"),
+                (114, "Aprecio pelas maravilhas da criação de Deus", "Maravilhas da Criação"),
+                (115, "Não caia nas armadilhas de Satanás", "Armadilhas de Satanás"),
+                (116, "Escolha sabiamente com quem irá associar-se!", "Associações"),
+                (117, "Como vencer o mal com o bem", "Bem vs Mal"),
+                (118, "Olhemos os jovens do ponto de vista de Jeová", "Juventude e Deus"),
+                (119, "Por que é benéfico que os cristãos vivam separados do mundo", "Separação do Mundo"),
+                (120, "Por que se submeter à regência de Deus agora", "Submissão a Deus"),
+                (121, "Uma família mundial que será salva da destruição", "Família Mundial"),
+                (122, "Discurso Reservado", "Tema Reservado"),
+                (123, "Discurso Reservado", "Tema Reservado"),
+                (124, "Razões para crer que a Bíblia é de autoria divina", "Autoria Divina"),
+                (125, "Por que a humanidade precisa de resgate", "Resgate"),
+                (126, "Quem se salvará?", "Salvação"),
+                (127, "O que acontece quando morremos?", "Morte"),
+                (128, "É o inferno um lugar de tormento ardente?", "Inferno"),
+                (129, "O que a Bíblia diz sobre a Trindade?", "Trindade"),
+                (130, "A Terra permanecerá para sempre", "Terra Eterna"),
+                (131, "Discurso Reservado", "Tema Reservado"),
+                (132, "Ressurreição — A vitória sobre a morte!", "Ressurreição"),
+                (133, "Tem importância o que cremos sobre a nossa origem?", "Origem"),
+                (134, "Será que os cristãos precisam guardar o sábado?", "Sábado"),
+                (135, "A santidade da vida e do sangue", "Santidade da Vida"),
+                (136, "Será que Deus aprova o uso de imagens na adoração?", "Imagens"),
+                (137, "Ocorreram realmente os milagres da Bíblia?", "Milagres"),
+                (138, "Viva com bom juízo num mundo depravado", "Bom Juízo"),
+                (139, "Sabedoria divina num mundo científico", "Sabedoria Divina"),
+                (140, "Quem é realmente Jesus Cristo?", "Jesus Cristo"),
+                (141, "Quando terão fim os gemidos da criação humana?", "Gemidos da Criação"),
+                (142, "Por que refugiar-se em Jeová", "Refúgio em Deus"),
+                (143, "Confie no Deus de todo consolo", "Deus de Consolo"),
+                (144, "Uma congregação leal sob a liderança de Cristo", "Congregação Leal"),
+                (145, "Quem é semelhante a Jeová, nosso Deus?", "Unicidade de Deus"),
+                (146, "Use a educação para louvar a Jeová", "Educação"),
+                (147, "Confie que Jeová tem o poder para nos salvar", "Poder de Deus"),
+                (148, "Você tem o mesmo conceito de Deus sobre a vida?", "Conceito de Vida"),
+                (149, "O que significa 'andar com Deus'?", "Andar com Deus"),
+                (150, "Este mundo está condenado à destruição?", "Destruição Mundial"),
+                (151, "Jeová é 'uma altura protetora' para seu povo", "Proteção Divina"),
+                (152, "Armagedom — Por que e quando?", "Armagedom"),
+                (153, "Tenha bem em mente o 'atemorizante dia'!", "Dia do Juízo"),
+                (154, "O governo humano é pesado na balança", "Governo Humano"),
+                (155, "Chegou a hora do julgamento de Babilônia?", "Julgamento de Babilônia"),
+                (156, "O Dia do Juízo — Tempo de temor ou de esperança?", "Dia do Juízo"),
+                (157, "Como os verdadeiros cristãos adornam o ensino divino", "Ensino Divino"),
+                (158, "Seja corajoso e confie em Jeová", "Coragem"),
+                (159, "Como encontrar segurança num mundo perigoso", "Segurança"),
+                (160, "Mantenha a identidade cristã!", "Identidade Cristã"),
+                (161, "Por que Jesus sofreu e morreu?", "Morte de Jesus"),
+                (162, "Seja liberto deste mundo em escuridão", "Libertação"),
+                (163, "Por que temer o Deus verdadeiro?", "Temor a Deus"),
+                (164, "Será que Deus ainda está no controle?", "Controle Divino"),
+                (165, "Os valores de quem você preza?", "Valores"),
+                (166, "Verdadeira fé — O que é e como mostrar", "Fé Verdadeira"),
+                (167, "Ajamos sabiamente num mundo insensato", "Sabedoria Prática"),
+                (168, "Você pode sentir-se seguro neste mundo atribulado!", "Segurança"),
+                (169, "Por que ser orientado pela Bíblia?", "Orientação Bíblica"),
+                (170, "Quem está qualificado para governar a humanidade?", "Governo"),
+                (171, "Poderá viver em paz agora — E para sempre!", "Paz Eterna"),
+                (172, "Que reputação você tem perante Deus?", "Reputação"),
+                (173, "Existe uma religião verdadeira do ponto de vista de Deus?", "Religião Verdadeira"),
+                (174, "Quem se qualificará para entrar no novo mundo de Deus?", "Novo Mundo"),
+                (175, "O que prova que a Bíblia é autêntica?", "Autenticidade Bíblica"),
+                (176, "Quando haverá verdadeira paz e segurança?", "Paz e Segurança"),
+                (177, "Onde encontrar ajuda em tempos de aflição?", "Ajuda Divina"),
+                (178, "Ande no caminho da integridade", "Integridade"),
+                (179, "Rejeite as fantasias do mundo, empenhe-se pelas realidades do Reino", "Realidades do Reino"),
+                (180, "A ressurreição — Por que essa esperança deve ser real para você", "Esperança da Ressurreição"),
+                (181, "Já é mais tarde do que você imagina?", "Tempo"),
+                (182, "O que o Reino de Deus está fazendo por nós agora?", "Reino de Deus"),
+                (183, "Desvie seus olhos do que é fútil!", "Futilidade"),
+                (184, "A morte é o fim de tudo?", "Morte"),
+                (185, "Será que a verdade influencia sua vida?", "Influência da Verdade"),
+                (186, "Sirva em união com o povo feliz de Deus", "União"),
+                (187, "Por que um Deus amoroso permite a maldade?", "Problema do Mal"),
+                (188, "Você confia em Jeová?", "Confiança"),
+                (189, "Ande com Deus e receba bênçãos para sempre", "Bênçãos"),
+                (190, "Como se cumprirá a promessa de perfeita felicidade familiar", "Felicidade Familiar"),
+                (191, "Como o amor e a fé vencem o mundo", "Amor e Fé"),
+                (192, "Você está no caminho para a vida eterna?", "Caminho da Vida"),
+                (193, "Os problemas de hoje logo serão coisa do passado", "Problemas Temporários"),
+                (194, "Como a sabedoria de Deus nos ajuda", "Sabedoria de Deus")
+            ]
+            
+            for numero, titulo, tema in todos_discursos:
+                discurso_existente = Discurso.query.filter_by(numero=numero).first()
+                if not discurso_existente:
+                    discurso = Discurso(
+                        numero=numero,
+                        titulo=titulo,
+                        tema=tema,
+                        descricao=f"Discurso público #{numero}",
+                        duracao=30,
+                        bloqueado=False
+                    )
+                    db.session.add(discurso)
+            
+            db.session.commit()
+            print(f"✅ Discursos criados: {Discurso.query.count()}/194")
+        else:
+            print(f"✅ Todos os 194 discursos já existem")
+            
+    except Exception as e:
+        print(f"❌ Erro ao criar dados iniciais: {e}")
+        db.session.rollback()
 
 # =============================================
 # ROTAS DE AUTENTICAÇÃO
@@ -1606,32 +1625,27 @@ def gerar_pdf():
 # =============================================
 
 def inicializar_banco():
-    """Força a criação de todas as tabelas e dados iniciais"""
+    """Inicializa o banco apenas se necessário, sem apagar dados existentes"""
     with app.app_context():
         try:
-            print("🔄 Iniciando inicialização do banco de dados...")
+            print("🔄 Verificando banco de dados...")
             
-            # Drop todas as tabelas para recomeçar
-            print("🗑️  Removendo tabelas existentes...")
-            db.drop_all()
-            
-            # Cria todas as tabelas
-            print("📦 Criando novas tabelas...")
+            # Cria tabelas apenas se não existirem
             db.create_all()
             
-            # Cria dados iniciais
-            print("🌱 Criando dados iniciais...")
-            criar_dados_iniciais()
-            
-            print("✅ Banco de dados inicializado com sucesso!")
-            
+            # Verifica se já existem dados básicos
+            if not Congregacao.query.first():
+                print("🌱 Criando dados iniciais...")
+                criar_dados_iniciais()
+                print("✅ Dados iniciais criados!")
+            else:
+                print("✅ Banco já possui dados, mantendo existentes.")
+                
         except Exception as e:
             print(f"❌ Erro na inicialização do banco: {e}")
-            # Tenta criar apenas as tabelas se o drop falhar
             try:
                 db.create_all()
-                criar_dados_iniciais()
-                print("✅ Tabelas criadas com fallback")
+                print("✅ Tabelas criadas com sucesso!")
             except Exception as e2:
                 print(f"❌ Erro crítico: {e2}")
 
