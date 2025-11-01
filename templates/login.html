@@ -42,8 +42,7 @@
             <div class="col-md-8 col-lg-6">
                 <div class="login-card p-4">
                     <div class="text-center mb-4">
-                        <!-- Logo JW.ORG -->
-                      <h3 class="fw-bold text-primary">Sistema de Discursos</h3>
+                        <h3 class="fw-bold text-primary">Sistema de Discursos</h3>
                         <p class="text-muted">Sistema de gestão para congregações</p>
                     </div>
 
@@ -79,7 +78,8 @@
                             </form>
 
                             <div class="mt-3 text-center">
-                                <a href="{{ url_for('orador_login') }}" class="btn btn-outline-success btn-mt">
+                                <!-- LINHA CORRIGIDA - botão Área do Orador -->
+                                <a href="{{ url_for('orador_login') }}" class="btn btn-outline-success btn-sm">
                                     <i class="bi bi-person-circle"></i> Área do Orador
                                 </a>
                             </div>
