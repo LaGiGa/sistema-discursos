@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Usuários Oradores - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-users me-2"></i>Usuários Oradores
+        </h1>
+        <div>
+            <a href="{{ url_for('admin_novo_usuario_orador') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Novo Usuário
+            </a>
+            <a href="{{ url_for('admin_relatorio_usuarios_oradores') }}" class="btn btn-success">
+                <i class="fas fa-download me-1"></i>Exportar Relatório
+            </a>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ total_usuarios }}</h4>
+                            <p class="card-text">Usuários Ativos</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ total_oradores_sem_usuario }}</h4>
+                            <p class="card-text">Oradores sem Usuário</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-plus fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ total_usuarios + total_oradores_sem_usuario }}</h4>
+                            <p class="card-text">Total de Oradores</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-microphone fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Usuários Oradores -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>Usuários Cadastrados
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if usuarios_oradores %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Orador</th>
+                            <th>Congregação</th>
+                            <th>Usuário</th>
+                            <th>Data de Criação</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios_oradores %}
+                        <tr>
+                            <td>
+                                <strong>{{ usuario.orador.nome }}</strong>
+                                {% if usuario.orador.anfitriao %}
+                                <span class="badge bg-success ms-1" title="Anfitrião">A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ usuario.orador.congregacao.nome }}</td>
+                            <td>
+                                <code>{{ usuario.username }}</code>
+                            </td>
+                            <td>{{ usuario.data_criacao.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% if usuario.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inativo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('admin_editar_usuario_orador', id=usuario.id) }}" 
+                                       class="btn btn-outline-primary" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('admin_resetar_senha_orador', id=usuario.id) }}" 
+                                          class="d-inline" onsubmit="return confirm('Deseja resetar a senha deste usuário?')">
+                                        <button type="submit" class="btn btn-outline-warning" title="Resetar Senha">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('admin_excluir_usuario_orador', id=usuario.id) }}" 
+                                          class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este usuário?')">
+                                        <button type="submit" class="btn btn-outline-danger" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhum usuário orador cadastrado</h5>
+                <p class="text-muted">Comece criando o primeiro usuário para um orador.</p>
+                <a href="{{ url_for('admin_novo_usuario_orador') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Criar Primeiro Usuário
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Oradores sem Usuário -->
+    {% if oradores_sem_usuario %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-user-plus me-2"></i>Oradores sem Usuário
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Orador</th>
+                            <th>Congregação</th>
+                            <th>Telefone</th>
+                            <th>Email</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for orador in oradores_sem_usuario %}
+                        <tr>
+                            <td>
+                                <strong>{{ orador.nome }}</strong>
+                                {% if orador.anfitriao %}
+                                <span class="badge bg-success ms-1" title="Anfitrião">A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ orador.congregacao.nome }}</td>
+                            <td>{{ orador.telefone or '-' }}</td>
+                            <td>{{ orador.email or '-' }}</td>
+                            <td>
+                                <a href="{{ url_for('admin_novo_usuario_orador') }}?orador_id={{ orador.id }}" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-user-plus me-1"></i>Criar Usuário
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Filtro simples na tabela
+function filtrarTabela() {
+    const input = document.getElementById('filtro');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('tabelaUsuarios');
+    const tr = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < tr.length; i++) {
+        const td = tr[i].getElementsByTagName('td');
+        let mostrar = false;
+        
+        for (let j = 0; j < td.length; j++) {
+            if (td[j]) {
+                if (td[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                    mostrar = true;
+                    break;
+                }
+            }
+        }
+        
+        tr[i].style.display = mostrar ? '' : 'none';
+    }
+}
+</script>
+{% endblock %}
+[file content end]

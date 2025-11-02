@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Usuário Orador - Sistema de Discursos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Cabeçalho -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Novo Usuário Orador
+                </h1>
+                <a href="{{ url_for('admin_usuarios_oradores') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar
+                </a>
+            </div>
+
+            <!-- Card do Formulário -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-circle me-2"></i>Informações do Usuário
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="formUsuario">
+                        <!-- Seleção do Orador -->
+                        <div class="mb-3">
+                            <label for="orador_id" class="form-label">
+                                <i class="fas fa-microphone me-1"></i>Selecionar Orador
+                            </label>
+                            <select class="form-select" id="orador_id" name="orador_id" required>
+                                <option value="">Selecione um orador...</option>
+                                {% for orador in oradores_sem_usuario %}
+                                <option value="{{ orador.id }}" 
+                                        {% if request.args.get('orador_id')|int == orador.id %}selected{% endif %}>
+                                    {{ orador.nome }} - {{ orador.congregacao.nome }}
+                                    {% if orador.anfitriao %} (Anfitrião){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Selecione um orador que ainda não possui usuário cadastrado.
+                            </div>
+                        </div>
+
+                        <!-- Nome de Usuário -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user me-1"></i>Nome de Usuário
+                            </label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="Digite o nome de usuário" required>
+                            <div class="form-text">
+                                O nome de usuário deve ser único e será usado para login.
+                            </div>
+                        </div>
+
+                        <!-- Senha -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-1"></i>Senha
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="Digite a senha" required minlength="6">
+                            <div class="form-text">
+                                A senha deve ter pelo menos 6 caracteres.
+                            </div>
+                        </div>
+
+                        <!-- Confirmar Senha -->
+                        <div class="mb-4">
+                            <label for="confirmar_password" class="form-label">
+                                <i class="fas fa-lock me-1"></i>Confirmar Senha
+                            </label>
+                            <input type="password" class="form-control" id="confirmar_password" 
+                                   name="confirmar_password" placeholder="Confirme a senha" required>
+                            <div class="invalid-feedback" id="senhaError">
+                                As senhas não coincidem.
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin_usuarios_oradores') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Criar Usuário
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informações Adicionais -->
+            <div class="alert alert-info mt-4">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-1"></i>Informações Importantes
+                </h6>
+                <ul class="mb-0">
+                    <li>O orador selecionado deve estar ativo no sistema</li>
+                    <li>O nome de usuário deve ser único em todo o sistema</li>
+                    <li>A senha será criptografada e não poderá ser recuperada posteriormente</li>
+                    <li>Você poderá resetar a senha a qualquer momento</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formUsuario');
+    const password = document.getElementById('password');
+    const confirmarPassword = document.getElementById('confirmar_password');
+    const senhaError = document.getElementById('senhaError');
+
+    function validarSenhas() {
+        if (password.value !== confirmarPassword.value) {
+            confirmarPassword.classList.add('is-invalid');
+            return false;
+        } else {
+            confirmarPassword.classList.remove('is-invalid');
+            return true;
+        }
+    }
+
+    confirmarPassword.addEventListener('input', validarSenhas);
+    password.addEventListener('input', validarSenhas);
+
+    form.addEventListener('submit', function(e) {
+        if (!validarSenhas()) {
+            e.preventDefault();
+            senhaError.style.display = 'block';
+        }
+    });
+
+    // Sugerir nome de usuário baseado no nome do orador
+    const oradorSelect = document.getElementById('orador_id');
+    const usernameInput = document.getElementById('username');
+
+    oradorSelect.addEventListener('change', function() {
+        if (this.value) {
+            const selectedOption = this.options[this.selectedIndex];
+            const oradorNome = selectedOption.text.split(' - ')[0].toLowerCase();
+            
+            // Criar sugestão de username
+            const usernameSugerido = oradorNome
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove acentos
+                .replace(/\s+/g, '.') // Substitui espaços por pontos
+                .replace(/[^a-z0-9.]/g, ''); // Remove caracteres especiais
+            
+            usernameInput.value = usernameSugerido;
+            usernameInput.focus();
+        }
+    });
+});
+</script>
+{% endblock %}
+[file content end]
