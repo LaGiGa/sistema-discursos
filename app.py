@@ -1588,6 +1588,17 @@ def exportar_historico_pdf():
         flash(f'Erro ao gerar PDF: {str(e)}. Gerando CSV como alternativa.', 'error')
         return exportar_historico_csv()
 
+@app.route('/relatorios/pdf')
+@login_required
+def relatorios_pdf():
+    """Rota de relatórios PDF - compatibilidade com templates existentes"""
+    try:
+        # Repassa os parâmetros para a função existente
+        return exportar_historico_pdf()
+    except Exception as e:
+        flash(f'Erro ao gerar relatório PDF: {str(e)}', 'error')
+        return redirect(url_for('listar_historico'))
+
 @app.route('/historico/exportar-csv')
 @login_required
 def exportar_historico_csv():
