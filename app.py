@@ -1769,6 +1769,48 @@ def remover_discurso_orador(orador_id, discurso_id):
     
     flash(f'Discurso {discurso_info} removido da sua lista!', 'success')
     return redirect(url_for('aceitar_discursos_orador', orador_id=orador_id))
+@app.route('/orador/<int:orador_id>/discursos-preparados')
+def discursos_preparados_orador(orador_id):
+    """Página onde o orador vê seus discursos preparados/aceitos"""
+    orador = Orador.query.get_or_404(orador_id)
+    
+    # Busca os discursos que o orador aceitou
+    discursos_preparados = OradorDiscurso.query.filter_by(
+        orador_id=orador_id,
+        aceito=True
+    ).order_by(OradorDiscurso.data_aceitacao.desc()).all()
+    
+    return render_template('orador/discursos_preparados.html',
+                         orador=orador,
+                         discursos_preparados=discursos_preparados)
+
+@app.route('/orador/<int:orador_id>/marcar-preparado/<int:discurso_id>', methods=['POST'])
+def marcar_discurso_preparado(orador_id, discurso_id):
+    """Marca um discurso como preparado pelo orador"""
+    orador_discurso = OradorDiscurso.query.filter_by(
+        orador_id=orador_id,
+        discurso_id=discurso_id
+    ).first_or_404()
+    
+    orador_discurso.preparado = True
+    db.session.commit()
+    
+    flash(f'Discurso #{orador_discurso.discurso.numero} marcado como preparado!', 'success')
+    return redirect(url_for('discursos_preparados_orador', orador_id=orador_id))
+
+@app.route('/orador/<int:orador_id>/desmarcar-preparado/<int:discurso_id>', methods=['POST'])
+def desmarcar_discurso_preparado(orador_id, discurso_id):
+    """Desmarca um discurso como preparado"""
+    orador_discurso = OradorDiscurso.query.filter_by(
+        orador_id=orador_id,
+        discurso_id=discurso_id
+    ).first_or_404()
+    
+    orador_discurso.preparado = False
+    db.session.commit()
+    
+    flash(f'Discurso #{orador_discurso.discurso.numero} desmarcado como preparado!', 'warning')
+    return redirect(url_for('discursos_preparados_orador', orador_id=orador_id))
 
 # =============================================
 # ROTAS PARA ADMIN VISUALIZAR ACEITAÇÕES
