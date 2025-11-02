@@ -659,6 +659,56 @@ def admin_relatorio_usuarios_oradores():
     except Exception as e:
         flash(f'Erro ao gerar relatório: {str(e)}', 'error')
         return redirect(url_for('admin_usuarios_oradores'))
+@app.route('/orador/<int:orador_id>/criar-usuario', methods=['GET', 'POST'])
+@login_required
+def criar_usuario_orador(orador_id):
+    """Cria usuário para um orador específico a partir da lista de oradores"""
+    orador = Orador.query.get_or_404(orador_id)
+    
+    # Verifica se já tem usuário
+    usuario_existente = UsuarioOrador.query.filter_by(orador_id=orador_id, ativo=True).first()
+    if usuario_existente:
+        flash(f'Este orador já possui um usuário cadastrado: {usuario_existente.username}', 'error')
+        return redirect(url_for('listar_oradores'))
+    
+    if request.method == 'POST':
+        try:
+            username = request.form['username']
+            password = request.form['password']
+            confirmar_password = request.form['confirmar_password']
+            
+            if password != confirmar_password:
+                flash('As senhas não coincidem!', 'error')
+                return redirect(url_for('criar_usuario_orador', orador_id=orador_id))
+            
+            # Verifica se username já existe
+            username_existente = UsuarioOrador.query.filter_by(username=username).first()
+            if username_existente:
+                flash('Nome de usuário já existe! Escolha outro.', 'error')
+                return redirect(url_for('criar_usuario_orador', orador_id=orador_id))
+            
+            # Cria o usuário
+            usuario = UsuarioOrador(
+                orador_id=orador_id,
+                username=username,
+                password=generate_password_hash(password)
+            )
+            
+            db.session.add(usuario)
+            db.session.commit()
+            
+            flash(f'Usuário criado com sucesso para {orador.nome}!', 'success')
+            return redirect(url_for('admin_usuarios_oradores'))
+            
+        except Exception as e:
+            flash(f'Erro ao criar usuário: {str(e)}', 'error')
+    
+    # Gera sugestão de username baseada no nome do orador
+    sugestao_username = orador.nome.lower().replace(' ', '.') + str(orador.id)
+    
+    return render_template('admin/criar_usuario_orador.html', 
+                         orador=orador,
+                         sugestao_username=sugestao_username)
 
 # =============================================
 # ROTAS PARA CONGREGAÇÕES
