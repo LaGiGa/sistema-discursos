@@ -18,17 +18,21 @@
 <body>
     <!-- Navbar Simplificada -->
     <nav class="navbar navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">
-                <i class="bi bi-mic-fill"></i> Sistema de Discursos - Orador
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">
+            <i class="bi bi-mic-fill"></i> Sistema de Discursos - Orador
+        </a>
+        <div class="navbar-nav ms-auto">
+            <span class="navbar-text me-3">
+                <i class="bi bi-person-circle"></i> {{ orador.nome }}
+            </span>
+            <a href="{{ url_for('orador_logout') }}" class="btn btn-outline-light btn-sm" 
+               onclick="return confirm('Deseja sair do sistema?')">
+                <i class="bi bi-box-arrow-right"></i> Sair
             </a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text">
-                    <i class="bi bi-person-circle"></i> {{ orador.nome }}
-                </span>
-            </div>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <div class="container mt-4">
         <!-- Mensagens Flash -->
@@ -126,14 +130,14 @@
                                     <td class="table-actions">
                                         {% if not discurso.realizado %}
                                             {% if discurso.confirmado_pelo_orador %}
-                                                <form action={{ url_for('cancelar_confirmacao_discurso_orador', orador_id=orador.id, agenda_id=discurso.id) }} method="POST" class="d-inline">
+                                                <form action="{{ url_for('cancelar_confirmacao_discurso_orador', orador_id=orador.id, agenda_id=discurso.id) }}" method="POST" class="d-inline">
                                                     <button type="submit" class="btn btn-outline-warning btn-sm" 
                                                             onclick="return confirm('Cancelar confirmação deste discurso?')">
                                                         <i class="bi bi-x-circle"></i> Cancelar
                                                     </button>
                                                 </form>
                                             {% else %}
-                                                <form action={{ url_for('confirmar_discurso_agendado_orador', orador_id=orador.id, agenda_id=discurso.id) }} method="POST" class="d-inline">
+                                                <form action="{{ url_for('confirmar_discurso_agendado_orador', orador_id=orador.id, agenda_id=discurso.id) }}" method="POST" class="d-inline">
                                                     <button type="submit" class="btn btn-success btn-sm">
                                                         <i class="bi bi-check-lg"></i> Confirmar
                                                     </button>

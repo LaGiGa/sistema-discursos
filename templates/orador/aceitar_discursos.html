@@ -34,6 +34,9 @@
                 <span class="navbar-text">
                     <i class="bi bi-person-circle"></i> {{ orador.nome }}
                 </span>
+		<a href="{{ url_for('orador_logout') }}" class="btn btn-outline-light btn-sm ms-2">
+                <i class="bi bi-box-arrow-right"></i> Sair
+            </a>
             </div>
         </div>
     </nav>

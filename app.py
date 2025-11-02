@@ -1909,6 +1909,13 @@ def orador_login():
     
     return render_template('orador/login.html')
 
+@app.route('/orador/logout')
+def orador_logout():
+    """Logout para usuários oradores"""
+    # Aqui você pode adicionar lógica de sessão se necessário
+    flash('Você saiu do sistema com sucesso!', 'success')
+    return redirect(url_for('orador_login'))
+
 @app.route('/orador/<int:orador_id>/discursos')
 def orador_discursos(orador_id):
     orador = Orador.query.get_or_404(orador_id)
